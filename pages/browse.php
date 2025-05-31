@@ -2,35 +2,150 @@
 // Include database connection
 require_once('../config/database.php');
 
+// Pagination settings
+$moviesPerPage = 6;
+$trendingPage = isset($_GET['trending_page']) ? max(1, (int)$_GET['trending_page']) : 1;
+$newestPage = isset($_GET['newest_page']) ? max(1, (int)$_GET['newest_page']) : 1;
+$actionPage = isset($_GET['action_page']) ? max(1, (int)$_GET['action_page']) : 1;
+$scifiPage = isset($_GET['scifi_page']) ? max(1, (int)$_GET['scifi_page']) : 1;
+
+// Calculate offset for each section
+$trendingOffset = ($trendingPage - 1) * $moviesPerPage;
+$newestOffset = ($newestPage - 1) * $moviesPerPage;
+$actionOffset = ($actionPage - 1) * $moviesPerPage;
+$scifiOffset = ($scifiPage - 1) * $moviesPerPage;
+
 // Get featured movies for hero section
 $featuredQuery = "SELECT * FROM movies WHERE is_featured = TRUE ORDER BY view_count DESC LIMIT 1";
 $featuredResult = $conn->query($featuredQuery);
 $featuredMovie = $featuredResult->fetch_assoc();
 
-// Get movies by category
-$trendingQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT 10";
+// Get total counts for pagination
+$trendingCountQuery = "SELECT COUNT(*) as total FROM movies";
+$trendingCountResult = $conn->query($trendingCountQuery);
+$trendingTotal = $trendingCountResult->fetch_assoc()['total'];
+$trendingTotalPages = ceil($trendingTotal / $moviesPerPage);
+
+$newestCountQuery = "SELECT COUNT(*) as total FROM movies";
+$newestCountResult = $conn->query($newestCountQuery);
+$newestTotal = $newestCountResult->fetch_assoc()['total'];
+$newestTotalPages = ceil($newestTotal / $moviesPerPage);
+
+$actionCountQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
+                     JOIN movie_genres mg ON m.id = mg.movie_id 
+                     JOIN genres g ON mg.genre_id = g.id 
+                     WHERE g.name = 'Action'";
+$actionCountResult = $conn->query($actionCountQuery);
+$actionTotal = $actionCountResult->fetch_assoc()['total'];
+$actionTotalPages = ceil($actionTotal / $moviesPerPage);
+
+$scifiCountQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
+                    JOIN movie_genres mg ON m.id = mg.movie_id 
+                    JOIN genres g ON mg.genre_id = g.id 
+                    WHERE g.name = 'Sci-Fi'";
+$scifiCountResult = $conn->query($scifiCountQuery);
+$scifiTotal = $scifiCountResult->fetch_assoc()['total'];
+$scifiTotalPages = ceil($scifiTotal / $moviesPerPage);
+
+// Get movies by category with pagination
+$trendingQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT $moviesPerPage OFFSET $trendingOffset";
 $trendingMovies = $conn->query($trendingQuery);
 
-$newestQuery = "SELECT * FROM movies ORDER BY release_year DESC LIMIT 10";
+$newestQuery = "SELECT * FROM movies ORDER BY release_year DESC LIMIT $moviesPerPage OFFSET $newestOffset";
 $newestMovies = $conn->query($newestQuery);
 
 $actionQuery = "SELECT m.* FROM movies m 
                 JOIN movie_genres mg ON m.id = mg.movie_id 
                 JOIN genres g ON mg.genre_id = g.id 
                 WHERE g.name = 'Action' 
-                LIMIT 10";
+                ORDER BY m.view_count DESC
+                LIMIT $moviesPerPage OFFSET $actionOffset";
 $actionMovies = $conn->query($actionQuery);
 
 $scifiQuery = "SELECT m.* FROM movies m 
                JOIN movie_genres mg ON m.id = mg.movie_id 
                JOIN genres g ON mg.genre_id = g.id 
                WHERE g.name = 'Sci-Fi' 
-               LIMIT 10";
+               ORDER BY m.view_count DESC
+               LIMIT $moviesPerPage OFFSET $scifiOffset";
 $scifiMovies = $conn->query($scifiQuery);
 
 // Get all available genres
 $genresQuery = "SELECT * FROM genres ORDER BY name";
 $genres = $conn->query($genresQuery);
+
+// Function to generate Bootstrap pagination with simple AJAX
+function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $otherParams = []) {
+    if ($totalPages <= 1) return '';
+    
+    $pagination = '<nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">';
+    $pagination .= '<ul class="pagination" data-section="' . $sectionId . '" data-page-param="' . $pageParam . '">';
+    
+    // Previous button
+    $prevDisabled = $currentPage <= 1 ? 'disabled' : '';
+    $prevPage = max(1, $currentPage - 1);
+    
+    $pagination .= '<li class="page-item ' . $prevDisabled . '">';
+    if ($prevDisabled) {
+        $pagination .= '<span class="page-link"><span aria-hidden="true">&laquo;</span></span>';
+    } else {
+        $pagination .= '<a class="page-link ajax-pagination" href="#" data-page="' . $prevPage . '" aria-label="Previous">';
+        $pagination .= '<span aria-hidden="true">&laquo;</span>';
+        $pagination .= '</a>';
+    }
+    $pagination .= '</li>';
+    
+    // Page numbers
+    $startPage = max(1, $currentPage - 2);
+    $endPage = min($totalPages, $currentPage + 2);
+    
+    // First page
+    if ($startPage > 1) {
+        $pagination .= '<li class="page-item"><a class="page-link ajax-pagination" href="#" data-page="1">1</a></li>';
+        if ($startPage > 2) {
+            $pagination .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    // Page range
+    for ($i = $startPage; $i <= $endPage; $i++) {
+        $active = $i == $currentPage ? 'active' : '';
+        
+        $pagination .= '<li class="page-item ' . $active . '">';
+        if ($active) {
+            $pagination .= '<span class="page-link">' . $i . '</span>';
+        } else {
+            $pagination .= '<a class="page-link ajax-pagination" href="#" data-page="' . $i . '">' . $i . '</a>';
+        }
+        $pagination .= '</li>';
+    }
+    
+    // Last page
+    if ($endPage < $totalPages) {
+        if ($endPage < $totalPages - 1) {
+            $pagination .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+        $pagination .= '<li class="page-item"><a class="page-link ajax-pagination" href="#" data-page="' . $totalPages . '">' . $totalPages . '</a></li>';
+    }
+    
+    // Next button
+    $nextDisabled = $currentPage >= $totalPages ? 'disabled' : '';
+    $nextPage = min($totalPages, $currentPage + 1);
+    
+    $pagination .= '<li class="page-item ' . $nextDisabled . '">';
+    if ($nextDisabled) {
+        $pagination .= '<span class="page-link"><span aria-hidden="true">&raquo;</span></span>';
+    } else {
+        $pagination .= '<a class="page-link ajax-pagination" href="#" data-page="' . $nextPage . '" aria-label="Next">';
+        $pagination .= '<span aria-hidden="true">&raquo;</span>';
+        $pagination .= '</a>';
+    }
+    $pagination .= '</li>';
+    
+    $pagination .= '</ul></nav>';
+    
+    return $pagination;
+}
 ?>
 
 <!DOCTYPE html>
@@ -42,7 +157,7 @@ $genres = $conn->query($genresQuery);
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/browse.css">
 </head>
@@ -61,7 +176,7 @@ $genres = $conn->query($genresQuery);
             <div class="hero-content">
                 <h1 class="hero-title"><?= $featuredMovie['title'] ?></h1>
                 <div class="hero-info mb-3">
-                    <span class="hero-badge"><i class="fas fa-star text-warning me-1"></i> <?= $featuredMovie['rating'] ?></span>
+                    <span class="hero-badge"><i class="bi bi-star-fill text-warning me-1"></i> <?= $featuredMovie['rating'] ?></span>
                     <span class="hero-badge"><?= $featuredMovie['release_year'] ?></span>
                     <span class="hero-badge"><?= $featuredMovie['duration_minutes'] ?> min</span>
                     <?php 
@@ -80,10 +195,10 @@ $genres = $conn->query($genresQuery);
                 <p class="hero-description text-light"><?= $featuredMovie['description'] ?></p>
                 <div class="d-flex gap-2">
                     <a href="watch.php?id=<?= $featuredMovie['id'] ?>" class="btn btn-primary-gradient">
-                        <i class="fas fa-play me-2"></i>Watch Now
+                        <i class="bi bi-play-circle me-2"></i>Watch Now
                     </a>
                     <a href="movie.php?id=<?= $featuredMovie['id'] ?>" class="btn btn-outline-light">
-                        <i class="fas fa-info-circle me-2"></i>Details
+                        <i class="bi bi-info-circle me-2"></i>Details
                     </a>
                 </div>
             </div>
@@ -108,7 +223,10 @@ $genres = $conn->query($genresQuery);
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="genreDropdown">
                                     <li><a class="dropdown-item" href="browse.php">All Genres</a></li>
-                                    <?php while($genre = $genres->fetch_assoc()): ?>
+                                    <?php 
+                                    $genres->data_seek(0);
+                                    while($genre = $genres->fetch_assoc()): 
+                                    ?>
                                         <li><a class="dropdown-item" href="browse.php?genre=<?= $genre['id'] ?>"><?= $genre['name'] ?></a></li>
                                     <?php endwhile; ?>
                                 </ul>
@@ -129,9 +247,9 @@ $genres = $conn->query($genresQuery);
             </div>
             
             <!-- Movie Categories -->
-            <section class="movie-section mb-5">
+            <section class="movie-section mb-5" id="trending-section">
                 <h3 class="category-title">Trending Now</h3>
-                <div class="movie-slider">
+                <div class="movie-slider" id="trending-content">
                     <div class="row g-4">
                         <?php while($movie = $trendingMovies->fetch_assoc()): 
                             $posterUrl = !empty($movie['poster_url']) ? 
@@ -144,14 +262,14 @@ $genres = $conn->query($genresQuery);
                                         <div class="movie-poster">
                                             <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
                                             <div class="play-btn">
-                                                <i class="fas fa-play"></i>
+                                                <i class="bi bi-play-fill"></i>
                                             </div>
                                         </div>
                                         <div class="p-3">
                                             <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
                                             <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
                                             <div class="d-flex align-items-center">
-                                                <small class="text-light"><i class="fas fa-star text-warning me-1"></i><?= $movie['rating'] ?></small>
+                                                <small class="text-light"><i class="bi bi-star-fill text-warning me-1"></i><?= $movie['rating'] ?></small>
                                             </div>
                                         </div>
                                     </a>
@@ -160,16 +278,18 @@ $genres = $conn->query($genresQuery);
                         <?php endwhile; ?>
                     </div>
                 </div>
+                <?= generatePagination($trendingPage, $trendingTotalPages, 'trending_page', 'trending-section', [
+                    'newest_page' => $newestPage,
+                    'action_page' => $actionPage,
+                    'scifi_page' => $scifiPage
+                ]) ?>
             </section>
             
-            <section class="movie-section mb-5">
+            <section class="movie-section mb-5" id="newest-section">
                 <h3 class="category-title">Newest Releases</h3>
-                <div class="movie-slider">
+                <div class="movie-slider" id="newest-content">
                     <div class="row g-4">
-                        <?php 
-                        // Reset result pointer to beginning
-                        $newestMovies->data_seek(0);
-                        while($movie = $newestMovies->fetch_assoc()): 
+                        <?php while($movie = $newestMovies->fetch_assoc()): 
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
                                 'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
@@ -180,14 +300,14 @@ $genres = $conn->query($genresQuery);
                                         <div class="movie-poster">
                                             <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
                                             <div class="play-btn">
-                                                <i class="fas fa-play"></i>
+                                                <i class="bi bi-play-fill"></i>
                                             </div>
                                         </div>
                                         <div class="p-3">
                                             <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
                                             <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
                                             <div class="d-flex align-items-center">
-                                                <small class="text-light"><i class="fas fa-star text-warning me-1"></i><?= $movie['rating'] ?></small>
+                                                <small class="text-light"><i class="bi bi-star-fill text-warning me-1"></i><?= $movie['rating'] ?></small>
                                             </div>
                                         </div>
                                     </a>
@@ -196,11 +316,16 @@ $genres = $conn->query($genresQuery);
                         <?php endwhile; ?>
                     </div>
                 </div>
+                <?= generatePagination($newestPage, $newestTotalPages, 'newest_page', 'newest-section', [
+                    'trending_page' => $trendingPage,
+                    'action_page' => $actionPage,
+                    'scifi_page' => $scifiPage
+                ]) ?>
             </section>
             
-            <section class="movie-section mb-5">
+            <section class="movie-section mb-5" id="action-section">
                 <h3 class="category-title">Action Movies</h3>
-                <div class="movie-slider">
+                <div class="movie-slider" id="action-content">
                     <div class="row g-4">
                         <?php while($movie = $actionMovies->fetch_assoc()): 
                             $posterUrl = !empty($movie['poster_url']) ? 
@@ -213,14 +338,14 @@ $genres = $conn->query($genresQuery);
                                         <div class="movie-poster">
                                             <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
                                             <div class="play-btn">
-                                                <i class="fas fa-play"></i>
+                                                <i class="bi bi-play-fill"></i>
                                             </div>
                                         </div>
                                         <div class="p-3">
                                             <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
                                             <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
                                             <div class="d-flex align-items-center">
-                                                <small class="text-light"><i class="fas fa-star text-warning me-1"></i><?= $movie['rating'] ?></small>
+                                                <small class="text-light"><i class="bi bi-star-fill text-warning me-1"></i><?= $movie['rating'] ?></small>
                                             </div>
                                         </div>
                                     </a>
@@ -229,11 +354,16 @@ $genres = $conn->query($genresQuery);
                         <?php endwhile; ?>
                     </div>
                 </div>
+                <?= generatePagination($actionPage, $actionTotalPages, 'action_page', 'action-section', [
+                    'trending_page' => $trendingPage,
+                    'newest_page' => $newestPage,
+                    'scifi_page' => $scifiPage
+                ]) ?>
             </section>
             
-            <section class="movie-section mb-5">
+            <section class="movie-section mb-5" id="scifi-section">
                 <h3 class="category-title">Sci-Fi Movies</h3>
-                <div class="movie-slider">
+                <div class="movie-slider" id="scifi-content">
                     <div class="row g-4">
                         <?php while($movie = $scifiMovies->fetch_assoc()): 
                             $posterUrl = !empty($movie['poster_url']) ? 
@@ -246,14 +376,14 @@ $genres = $conn->query($genresQuery);
                                         <div class="movie-poster">
                                             <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
                                             <div class="play-btn">
-                                                <i class="fas fa-play"></i>
+                                                <i class="bi bi-play-fill"></i>
                                             </div>
                                         </div>
                                         <div class="p-3">
                                             <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
                                             <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
                                             <div class="d-flex align-items-center">
-                                                <small class="text-light"><i class="fas fa-star text-warning me-1"></i><?= $movie['rating'] ?></small>
+                                                <small class="text-light"><i class="bi bi-star-fill text-warning me-1"></i><?= $movie['rating'] ?></small>
                                             </div>
                                         </div>
                                     </a>
@@ -262,6 +392,11 @@ $genres = $conn->query($genresQuery);
                         <?php endwhile; ?>
                     </div>
                 </div>
+                <?= generatePagination($scifiPage, $scifiTotalPages, 'scifi_page', 'scifi-section', [
+                    'trending_page' => $trendingPage,
+                    'newest_page' => $newestPage,
+                    'action_page' => $actionPage
+                ]) ?>
             </section>
         </div>
     </div>
@@ -272,5 +407,90 @@ $genres = $conn->query($genresQuery);
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/main.js"></script>
+    <script>
+    // Simple AJAX Pagination
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle pagination clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.ajax-pagination')) {
+                e.preventDefault();
+                
+                const link = e.target.closest('.ajax-pagination');
+                const pagination = link.closest('.pagination');
+                const section = link.closest('.movie-section');
+                
+                const sectionId = pagination.dataset.section;
+                const pageParam = pagination.dataset.pageParam;
+                const page = parseInt(link.dataset.page);
+                
+                loadPage(section, sectionId, pageParam, page);
+            }
+        });
+        
+        function loadPage(section, sectionId, pageParam, page) {
+            const contentDiv = section.querySelector('.movie-slider');
+            const paginationDiv = section.querySelector('.pagination').closest('nav');
+            
+            // Add loading state
+            section.style.opacity = '0.6';
+            section.style.pointerEvents = 'none';
+            
+            // Scroll to section
+            const navbarHeight = 80;
+            const sectionTop = section.offsetTop - navbarHeight;
+            window.scrollTo({
+                top: sectionTop,
+                behavior: 'smooth'
+            });
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('section', getSectionType(pageParam));
+            formData.append('page', page);
+            
+            // Make AJAX request
+            fetch('../components/browse_load_section.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update content
+                    contentDiv.innerHTML = data.content;
+                    paginationDiv.outerHTML = data.pagination;
+                    
+                    // Update URL without refresh
+                    const url = new URL(window.location);
+                    url.searchParams.set(pageParam, page);
+                    history.replaceState(null, '', url);
+                } else {
+                    console.error('Error:', data.message);
+                }
+                
+                // Remove loading state
+                section.style.opacity = '1';
+                section.style.pointerEvents = 'auto';
+            })
+            .catch(error => {
+                console.error('Network error:', error);
+                
+                // Remove loading state
+                section.style.opacity = '1';
+                section.style.pointerEvents = 'auto';
+            });
+        }
+        
+        function getSectionType(pageParam) {
+            switch(pageParam) {
+                case 'trending_page': return 'trending';
+                case 'newest_page': return 'newest';
+                case 'action_page': return 'action';
+                case 'scifi_page': return 'scifi';
+                default: return 'trending';
+            }
+        }
+    });
+    </script>
 </body>
 </html>

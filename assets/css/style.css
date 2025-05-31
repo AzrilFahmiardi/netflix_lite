@@ -547,6 +547,72 @@ footer a:hover {
     color: var(--primary-color);
 }
 
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Pagination */
+.pagination {
+    --bs-pagination-padding-x: 0.75rem;
+    --bs-pagination-padding-y: 0.5rem;
+    --bs-pagination-font-size: 0.875rem;
+    --bs-pagination-color: rgba(255, 255, 255, 0.8);
+    --bs-pagination-bg: rgba(255, 255, 255, 0.1);
+    --bs-pagination-border-width: 1px;
+    --bs-pagination-border-color: rgba(255, 255, 255, 0.2);
+    --bs-pagination-border-radius: 8px;
+    --bs-pagination-hover-color: #fff;
+    --bs-pagination-hover-bg: rgba(108, 92, 231, 0.2);
+    --bs-pagination-hover-border-color: rgba(108, 92, 231, 0.4);
+    --bs-pagination-focus-color: #fff;
+    --bs-pagination-focus-bg: rgba(108, 92, 231, 0.2);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+    --bs-pagination-active-color: #fff;
+    --bs-pagination-active-bg: var(--primary-color);
+    --bs-pagination-active-border-color: var(--primary-color);
+    --bs-pagination-disabled-color: rgba(255, 255, 255, 0.3);
+    --bs-pagination-disabled-bg: rgba(255, 255, 255, 0.05);
+    --bs-pagination-disabled-border-color: rgba(255, 255, 255, 0.1);
+}
+
+.pagination .page-link {
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link,
+.pagination .page-item.active .page-link:hover {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+}
+
+/* Section loading state */
+.section-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.section-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(108, 92, 231, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    z-index: 1000;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .search-input {
@@ -556,4 +622,9 @@ footer a:hover {
     .search-input:focus {
         width: 200px;
     }
+}
+
+/* Section anchor offset for fixed navbar */
+.movie-section {
+    scroll-margin-top: 100px;
 }
