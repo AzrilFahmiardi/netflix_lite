@@ -1,0 +1,15 @@
+.movie-hero {
+    padding: 120px 0 50px;
+    background-size: cover;
+    background-position: center;
+}
+
+.movie-hero {
+    position: relative;
+}
+
+.movie-hero img {
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+}
