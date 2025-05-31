@@ -13,6 +13,20 @@ $userInitial = $isLoggedIn ? substr($_SESSION['name'], 0, 1) : '';
 // Get trending movies for preview section
 $trendingQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT 4";
 $trendingMovies = $conn->query($trendingQuery);
+
+// Helper function for poster URLs
+function getPosterUrl($movie) {
+    if (!empty($movie['poster_url'])) {
+        // If URL starts with http, it's external
+        if (strpos($movie['poster_url'], 'http') === 0) {
+            return $movie['poster_url'];
+        }
+        // Otherwise it's a local path
+        return $movie['poster_url'];
+    }
+    // Fallback to YouTube thumbnail
+    return 'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -118,15 +132,14 @@ $trendingMovies = $conn->query($trendingQuery);
                 <?php 
                 if ($trendingMovies && $trendingMovies->num_rows > 0):
                     while ($movie = $trendingMovies->fetch_assoc()): 
-                        // Get poster URL (from uploaded file or YouTube thumbnail)
-                        $posterUrl = !empty($movie['poster_url']) ? 
-                            $movie['poster_url'] : 
-                            'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+                        $posterUrl = getPosterUrl($movie);
                 ?>
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
-                        <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
-                        <div class="p-3">
+                        <div class="movie-poster-container">
+                            <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
+                        </div>
+                        <div class="movie-info">
                             <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
                             <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
                             <div class="d-flex align-items-center">
@@ -142,8 +155,10 @@ $trendingMovies = $conn->query($trendingQuery);
                 ?>
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
-                        <img src="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 1">
-                        <div class="p-3">
+                        <div class="movie-poster-container">
+                            <img src="https://images.unsplash.com/photo-1440404653325-ab127d49abc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 1">
+                        </div>
+                        <div class="movie-info">
                             <h5 class="mb-2 text-white">The Great Adventure</h5>
                             <p class="text-light small mb-2">Action • 2023 • <span class="badge">HD</span></p>
                             <div class="d-flex align-items-center">
@@ -155,8 +170,10 @@ $trendingMovies = $conn->query($trendingQuery);
                 
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
-                        <img src="https://images.unsplash.com/photo-1489599824261-58cee4e46fae?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 2">
-                        <div class="p-3">
+                        <div class="movie-poster-container">
+                            <img src="https://images.unsplash.com/photo-1489599824261-58cee4e46fae?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 2">
+                        </div>
+                        <div class="movie-info">
                             <h5 class="mb-2 text-white">Mystery Island</h5>
                             <p class="text-light small mb-2">Thriller • 2023 • <span class="badge">4K</span></p>
                             <div class="d-flex align-items-center">
@@ -168,8 +185,10 @@ $trendingMovies = $conn->query($trendingQuery);
                 
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
-                        <img src="https://images.unsplash.com/photo-1478720568477-b0ac8d8373b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 3">
-                        <div class="p-3">
+                        <div class="movie-poster-container">
+                            <img src="https://images.unsplash.com/photo-1478720568477-b0ac8d8373b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 3">
+                        </div>
+                        <div class="movie-info">
                             <h5 class="mb-2 text-white">Space Odyssey</h5>
                             <p class="text-light small mb-2">Sci-Fi • 2023 • <span class="badge">4K</span></p>
                             <div class="d-flex align-items-center">
@@ -181,8 +200,10 @@ $trendingMovies = $conn->query($trendingQuery);
                 
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
-                        <img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 4">
-                        <div class="p-3">
+                        <div class="movie-poster-container">
+                            <img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Movie 4">
+                        </div>
+                        <div class="movie-info">
                             <h5 class="mb-2 text-white">Love Stories</h5>
                             <p class="text-light small mb-2">Romance • 2023 • <span class="badge">HD</span></p>
                             <div class="d-flex align-items-center">

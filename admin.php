@@ -26,8 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             
             if (in_array($ext, $allowed)) {
-                // Create a unique filename
-                $new_filename = uniqid() . '_' . str_replace(' ', '_', strtolower($title)) . '.' . $ext;
+                $new_filename = uniqid() . '.' . $ext;
                 $upload_dir = 'assets/images/posters/';
                 
                 // Create directory if it doesn't exist
@@ -129,8 +128,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             
             if (in_array($ext, $allowed)) {
-                // Create a unique filename
-                $new_filename = uniqid() . '_' . str_replace(' ', '_', strtolower($title)) . '.' . $ext;
+                // Create a unique filename - simplified to just use the unique ID
+                $new_filename = uniqid() . '.' . $ext;
                 $upload_dir = 'assets/images/posters/';
                 
                 // Create directory if it doesn't exist

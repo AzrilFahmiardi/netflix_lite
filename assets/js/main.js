@@ -341,6 +341,47 @@ function removeFromLocalStorage(key) {
     }
 }
 
+// Utility functions for image paths
+function fixImagePath(path) {
+    if (!path) return '';
+    
+    // If it's an absolute URL (starts with http/https), return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    
+    // Check if we need to go up one directory level based on current path
+    const inPagesDirectory = window.location.pathname.includes('/pages/');
+    
+    // If we're in the pages subdirectory, we need to go up one level
+    if (inPagesDirectory && !path.startsWith('../')) {
+        return '../' + path;
+    }
+    
+    return path;
+}
+
+// Ensure all movie poster images load properly
+document.addEventListener('DOMContentLoaded', function() {
+    // Fix all movie poster images
+    document.querySelectorAll('.movie-card img').forEach(img => {
+        img.onerror = function() {
+            // If image fails to load, replace with a placeholder
+            this.src = fixImagePath('assets/images/placeholder.jpg');
+        };
+        
+        // If the image has a data-src attribute, use that as the real source
+        if (img.getAttribute('data-src')) {
+            img.src = fixImagePath(img.getAttribute('data-src'));
+        }
+        
+        // Make sure the image src is properly formatted
+        if (img.src && !img.src.startsWith('http')) {
+            img.src = fixImagePath(img.src);
+        }
+    });
+});
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips

@@ -167,9 +167,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
     
     <!-- Hero Section - Featured Movie -->
     <?php if($featuredMovie): 
+        // Simple direct poster URL handling without helpers or YouTube fallback
         $posterUrl = !empty($featuredMovie['poster_url']) ? 
             (strpos($featuredMovie['poster_url'], 'http') === 0 ? $featuredMovie['poster_url'] : '../' . $featuredMovie['poster_url']) : 
-            'https://img.youtube.com/vi/' . $featuredMovie['trailer_youtube_id'] . '/maxresdefault.jpg';
+            '../assets/images/default-poster.jpg';
     ?>
     <section class="hero-section" style="background-image: linear-gradient(to bottom, rgba(15, 15, 35, 0.8), rgba(15, 15, 35, 0.95)), url(<?= $posterUrl ?>);">
         <div class="container">
@@ -252,9 +253,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="trending-content">
                     <div class="row g-4">
                         <?php while($movie = $trendingMovies->fetch_assoc()): 
+                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
-                                'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+                                '../assets/images/default-poster.jpg';
                         ?>
                             <div class="col-6 col-md-4 col-lg-3 col-xl-2">
                                 <div class="movie-card">
@@ -290,9 +292,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="newest-content">
                     <div class="row g-4">
                         <?php while($movie = $newestMovies->fetch_assoc()): 
+                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
-                                'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+                                '../assets/images/default-poster.jpg';
                         ?>
                             <div class="col-6 col-md-4 col-lg-3 col-xl-2">
                                 <div class="movie-card">
@@ -328,9 +331,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="action-content">
                     <div class="row g-4">
                         <?php while($movie = $actionMovies->fetch_assoc()): 
+                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
-                                'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+                                '../assets/images/default-poster.jpg';
                         ?>
                             <div class="col-6 col-md-4 col-lg-3 col-xl-2">
                                 <div class="movie-card">
@@ -366,9 +370,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="scifi-content">
                     <div class="row g-4">
                         <?php while($movie = $scifiMovies->fetch_assoc()): 
+                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
-                                'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
+                                '../assets/images/default-poster.jpg';
                         ?>
                             <div class="col-6 col-md-4 col-lg-3 col-xl-2">
                                 <div class="movie-card">
