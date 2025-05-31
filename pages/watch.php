@@ -30,16 +30,26 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $movieId);
 $stmt->execute();
 
-// Get similar movies (same genre)
-$sql = "SELECT DISTINCT m.* FROM movies m
-        JOIN movie_genres mg1 ON m.id = mg1.movie_id
-        JOIN movie_genres mg2 ON mg1.genre_id = mg2.genre_id
-        WHERE mg2.movie_id = ? AND m.id != ?
-        LIMIT 6";
+// Get movie cast - using the same approach as in movie.php
+$sql = "SELECT cc.name, cc.role, mcc.role_in_movie, mcc.character_name 
+        FROM cast_crew cc
+        JOIN movie_cast_crew mcc ON cc.id = mcc.person_id
+        WHERE mcc.movie_id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $movieId, $movieId);
+$stmt->bind_param("i", $movieId);
 $stmt->execute();
-$similarMovies = $stmt->get_result();
+$castResult = $stmt->get_result();
+
+// Get movie reviews - same as movie.php
+$sql = "SELECT ur.*, u.username, u.first_name, u.last_name
+        FROM user_reviews ur
+        JOIN users u ON ur.user_id = u.id
+        WHERE ur.movie_id = ?
+        ORDER BY ur.created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $movieId);
+$stmt->execute();
+$reviewsResult = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -53,62 +63,15 @@ $similarMovies = $stmt->get_result();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <style>
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%; /* 16:9 aspect ratio */
-            background-color: #000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .movie-info-panel {
-            background: rgba(26, 26, 62, 0.8);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .similar-movie {
-            margin-bottom: 15px;
-            transition: transform 0.2s;
-        }
-        
-        .similar-movie:hover {
-            transform: translateY(-5px);
-        }
-        
-        .similar-movie img {
-            border-radius: 6px;
-        }
-        
-        .similar-movie .title {
-            font-size: 14px;
-            margin-top: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/watch.css">
 </head>
 <body>
     <!-- Navigation bar -->
     <?php include_once('../components/navbar.php'); ?>
     
-    <div class="container mt-5 pt-5">
-        <div class="row">
-            <div class="col-lg-8">
+    <div class="container-fluid mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
                 <!-- Video Player -->
                 <div class="video-container">
                     <iframe 
@@ -122,64 +85,84 @@ $similarMovies = $stmt->get_result();
                 
                 <!-- Movie Info -->
                 <div class="movie-info-panel">
-                    <h1 class="mb-2"><?= $movie['title'] ?></h1>
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="badge bg-primary me-2"><?= $movie['rating'] ?> <i class="fas fa-star"></i></span>
-                        <span class="badge bg-secondary me-2"><?= $movie['release_year'] ?></span>
-                        <span class="badge bg-secondary me-2"><?= $movie['duration_minutes'] ?> min</span>
-                        <span class="ms-auto">
-                            <button class="btn btn-sm btn-outline-light">
-                                <i class="fas fa-plus me-1"></i> Add to Watchlist
-                            </button>
-                        </span>
+                    <h1 class="mb-3"><?= $movie['title'] ?></h1>
+                    <div class="movie-metadata">
+                        <span class="badge bg-primary me-2 p-2"><i class="fas fa-star me-1"></i> <?= $movie['rating'] ?></span>
+                        <span class="badge bg-secondary me-2 p-2"><?= $movie['release_year'] ?></span>
+                        <span class="badge bg-secondary me-2 p-2"><i class="fas fa-clock me-1"></i> <?= $movie['duration_minutes'] ?> min</span>
                     </div>
-                    <p><?= $movie['description'] ?></p>
+                    <div class="movie-description">
+                        <?= $movie['description'] ?>
+                    </div>
                     <p><strong>Director:</strong> <?= $movie['director'] ?></p>
-                </div>
-            </div>
-            
-            <div class="col-lg-4">
-                <!-- Similar Movies -->
-                <div class="card bg-dark">
-                    <div class="card-header">
-                        <h5 class="mb-0">Similar Movies</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <?php while($similarMovie = $similarMovies->fetch_assoc()): ?>
-                                <div class="col-6 similar-movie">
-                                    <a href="watch.php?id=<?= $similarMovie['id'] ?>">
-                                        <?php 
-                                        $posterUrl = !empty($similarMovie['poster_url']) ? 
-                                            (strpos($similarMovie['poster_url'], 'http') === 0 ? $similarMovie['poster_url'] : '../' . $similarMovie['poster_url']) : 
-                                            'https://img.youtube.com/vi/' . $similarMovie['trailer_youtube_id'] . '/mqdefault.jpg';
-                                        ?>
-                                        <img src="<?= $posterUrl ?>" alt="<?= $similarMovie['title'] ?>" class="img-fluid">
-                                        <div class="title"><?= $similarMovie['title'] ?></div>
-                                    </a>
+                    
+                    <!-- Cast Section -->
+                    <?php if ($castResult->num_rows > 0): ?>
+                    <div class="cast-crew-section mt-4">
+                        <h4 class="mb-3">Cast & Crew</h4>
+                        <div class="cast-list">
+                            <?php 
+                            $castResult->data_seek(0);
+                            while ($castMember = $castResult->fetch_assoc()): 
+                                $initial = substr($castMember['name'], 0, 1);
+                            ?>
+                                <div class="cast-card">
+                                    <div class="cast-avatar"><?= $initial ?></div>
+                                    <div class="cast-info">
+                                        <h5><?= $castMember['name'] ?></h5>
+                                        <p>
+                                            <?php if (!empty($castMember['character_name'])): ?>
+                                                as <?= $castMember['character_name'] ?>
+                                            <?php else: ?>
+                                                <?= $castMember['role_in_movie'] ?>
+                                            <?php endif; ?>
+                                        </p>
+                                    </div>
                                 </div>
                             <?php endwhile; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Comments Section -->
-                <div class="card bg-dark mt-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Reviews</h5>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addReviewModal">
-                            <i class="fas fa-plus me-1"></i> Add Review
+                <div class="movie-info-panel mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">User Reviews</h3>
+                        <button class="btn btn-primary-gradient" data-bs-toggle="modal" data-bs-target="#addReviewModal">
+                            <i class="fas fa-star me-2"></i>Write a Review
                         </button>
                     </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        <div class="reviews-container">
-                            <!-- Placeholder for reviews - To be implemented -->
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-comments fa-3x mb-3"></i>
-                                <p>Be the first to review this movie</p>
+                    
+                    <?php if ($reviewsResult->num_rows > 0): ?>
+                        <?php while ($review = $reviewsResult->fetch_assoc()): 
+                            $reviewerName = $review['first_name'] . ' ' . $review['last_name'];
+                            $reviewerInitial = substr($review['first_name'], 0, 1);
+                            $reviewDate = date('M d, Y', strtotime($review['created_at']));
+                        ?>
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer">
+                                        <div class="reviewer-avatar"><?= $reviewerInitial ?></div>
+                                        <div class="reviewer-info">
+                                            <h5><?= $reviewerName ?></h5>
+                                            <p><?= $reviewDate ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="review-rating">
+                                        <i class="fas fa-star text-warning me-1"></i> <?= $review['rating'] ?>/5
+                                    </div>
+                                </div>
+                                <div class="review-text">
+                                    <?= $review['review_text'] ?>
+                                </div>
                             </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No reviews yet. Be the first to review this movie!
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -194,25 +177,31 @@ $similarMovies = $stmt->get_result();
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="reviewForm" action="add_review.php" method="post">
+                    <form id="reviewForm" action="../actions/add_review.php" method="post">
                         <input type="hidden" name="movie_id" value="<?= $movie['id'] ?>">
                         
                         <div class="mb-3">
-                            <label class="form-label">Rating</label>
-                            <div class="rating-input">
-                                <?php for($i = 5; $i >= 1; $i--): ?>
-                                    <input type="radio" id="star<?= $i ?>" name="rating" value="<?= $i ?>" />
-                                    <label for="star<?= $i ?>"><i class="fas fa-star"></i></label>
-                                <?php endfor; ?>
+                            <label for="rating" class="form-label">Your Rating</label>
+                            <div class="rating-stars">
+                                <div class="d-flex gap-2">
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                    <span class="star-rating" data-value="<?= $i ?>">
+                                        <i class="far fa-star fa-2x"></i>
+                                    </span>
+                                    <?php endfor; ?>
+                                </div>
                             </div>
+                            <input type="hidden" name="rating" id="rating" required>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="review_text" class="form-label">Your Review</label>
-                            <textarea class="form-control" id="review_text" name="review_text" rows="4" required></textarea>
+                            <label for="review" class="form-label">Your Review</label>
+                            <textarea class="form-control bg-dark text-light" id="review" name="review_text" rows="5" placeholder="What did you think of the movie?" required></textarea>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary-gradient">Submit Review</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -225,5 +214,45 @@ $similarMovies = $stmt->get_result();
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/main.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Star rating functionality
+        const stars = document.querySelectorAll('.star-rating');
+        const ratingInput = document.getElementById('rating');
+        
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const ratingValue = parseInt(this.getAttribute('data-value'));
+                highlightStars(ratingValue);
+            });
+            
+            star.addEventListener('mouseout', function() {
+                const currentRating = parseInt(ratingInput.value) || 0;
+                highlightStars(currentRating);
+            });
+            
+            star.addEventListener('click', function() {
+                const ratingValue = parseInt(this.getAttribute('data-value'));
+                ratingInput.value = ratingValue;
+                highlightStars(ratingValue);
+            });
+        });
+        
+        function highlightStars(rating) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                const starIcon = star.querySelector('i');
+                
+                if (starValue <= rating) {
+                    starIcon.classList.remove('far');
+                    starIcon.classList.add('fas', 'text-warning');
+                } else {
+                    starIcon.classList.remove('fas', 'text-warning');
+                    starIcon.classList.add('far');
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>
