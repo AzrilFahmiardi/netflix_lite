@@ -30,6 +30,15 @@ $rootPath = $isInPagesDir ? '../' : '';
         <div class="collapse navbar-collapse" id="navbarNav">
             
             <?php if($isLoggedIn): ?>
+                <!-- Main navigation links -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= $isInPagesDir ? '' : 'pages/' ?>browse.php">
+                            Browse
+                        </a>
+                    </li>
+                </ul>
+                
                 <div class="ms-auto d-flex align-items-center">
                     <!-- Search form -->
                     <form class="search-form me-3" action="<?= $isInPagesDir ? '' : 'pages/' ?>search.php" method="get">
