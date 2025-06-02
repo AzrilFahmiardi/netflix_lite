@@ -30,27 +30,27 @@ INSERT INTO cast_crew (name, role, nationality, bio, birth_date) VALUES
 ('Scarlett Johansson', 'actor', 'American', 'Action and drama actress', '1984-11-22');
 
 -- Insert 20 Movies
-INSERT INTO movies (title, description, director, release_year, duration_minutes, genre, rating, trailer_youtube_id, movie_youtube_id, is_featured, view_count) VALUES 
-('The Quantum Realm', 'A mind-bending sci-fi adventure through dimensions', 'Christopher Nolan', 2023, 127, 'Sci-Fi', 9.1, 'zSWdZVtXT7E', 'zSWdZVtXT7E', TRUE, 15234),
-('Interstellar', 'A team of explorers travel through a wormhole in space', 'Christopher Nolan', 2014, 169, 'Sci-Fi', 8.6, '2QKg5SZ_35I', '2QKg5SZ_35I', TRUE, 23445),
-('Inception', 'A thief who enters peoples dreams', 'Christopher Nolan', 2010, 148, 'Sci-Fi', 8.8, 'nyc6RJEEe0U', 'nyc6RJEEe0U', TRUE, 31267),
-('Doctor Strange', 'A surgeon discovers the world of magic', 'Scott Derrickson', 2016, 115, 'Action', 7.5, 'LY7x2Ihqjmc', 'LY7x2Ihqjmc', FALSE, 18921),
-('Avengers: Endgame', 'The final battle against Thanos', 'Russo Brothers', 2019, 181, 'Action', 8.4, 'TcMBFSGVi1c', 'TcMBFSGVi1c', TRUE, 42156),
-('Spider-Man: No Way Home', 'Spider-Man faces multiverse chaos', 'Jon Watts', 2021, 148, 'Action', 8.2, 'JfVOs4VSpmA', 'JfVOs4VSpmA', FALSE, 38945),
-('The Dark Knight', 'Batman faces the Joker', 'Christopher Nolan', 2008, 152, 'Action', 9.0, 'EXeTwQWrcwY', 'EXeTwQWrcwY', TRUE, 51234),
-('Iron Man', 'Tony Stark becomes Iron Man', 'Jon Favreau', 2008, 126, 'Action', 7.9, '8ugaeA-nMTc', '8ugaeA-nMTc', FALSE, 29876),
-('Wonder Woman', 'Diana Prince discovers her powers', 'Patty Jenkins', 2017, 141, 'Action', 7.4, '1Q8fG0TtVAY', '1Q8fG0TtVAY', FALSE, 22134),
-('Black Widow', 'Natasha Romanoff confronts her past', 'Cate Shortland', 2021, 134, 'Action', 6.7, 'Fp9pNPdNwjI', 'Fp9pNPdNwjI', FALSE, 16789),
-('Guardians of the Galaxy', 'A group of misfits save the galaxy', 'James Gunn', 2014, 121, 'Action', 8.0, 'd96cjJhvlMA', 'd96cjJhvlMA', FALSE, 33421),
-('The Matrix', 'Neo discovers the truth about reality', 'Wachowski Sisters', 1999, 136, 'Sci-Fi', 8.7, 'vKQi3bBA1y8', 'vKQi3bBA1y8', TRUE, 45678),
-('Blade Runner 2049', 'A young blade runner discovers secrets', 'Denis Villeneuve', 2017, 164, 'Sci-Fi', 8.0, 'gCcx85zbxz4', 'gCcx85zbxz4', FALSE, 19234),
-('Dune', 'Paul Atreides journey on planet Arrakis', 'Denis Villeneuve', 2021, 155, 'Sci-Fi', 8.0, '8g18jFHCLXk', '8g18jFHCLXk', TRUE, 27543),
-('Mad Max: Fury Road', 'Post-apocalyptic action adventure', 'George Miller', 2015, 120, 'Action', 8.1, 'hEJnMQG9ev8', 'hEJnMQG9ev8', FALSE, 21876),
-('John Wick', 'An ex-hitman seeks vengeance', 'Chad Stahelski', 2014, 101, 'Action', 7.4, 'C0BMx-qxsP4', 'C0BMx-qxsP4', FALSE, 18765),
-('The Joker', 'Origin story of Gothams famous villain', 'Todd Phillips', 2019, 122, 'Drama', 8.4, 'zAGVQLHvwOY', 'zAGVQLHvwOY', FALSE, 35421),
-('Parasite', 'A poor family infiltrates a rich household', 'Bong Joon-ho', 2019, 132, 'Thriller', 8.6, '5xH0HfJHsaY', '5xH0HfJHsaY', FALSE, 24567),
-('La La Land', 'A jazz musician and actress fall in love', 'Damien Chazelle', 2016, 128, 'Romance', 8.0, '0pdqf4P9MB8', '0pdqf4P9MB8', FALSE, 19876),
-('Top Gun: Maverick', 'Maverick returns to train new pilots', 'Joseph Kosinski', 2022, 131, 'Action', 8.3, 'qSqVVswa420', 'qSqVVswa420', TRUE, 41234);
+INSERT INTO movies (title, description, director, release_year, duration_minutes, genre, rating, trailer_youtube_id, movie_url, is_featured, view_count) VALUES 
+('The Quantum Realm', 'A mind-bending sci-fi adventure through dimensions', 'Christopher Nolan', 2023, 127, 'Sci-Fi', 9.1, 'zSWdZVtXT7E', 'https://www.youtube.com/embed/zSWdZVtXT7E', TRUE, 15234),
+('Interstellar', 'A team of explorers travel through a wormhole in space', 'Christopher Nolan', 2014, 169, 'Sci-Fi', 8.6, '2QKg5SZ_35I', 'https://www.youtube.com/embed/2QKg5SZ_35I', TRUE, 23445),
+('Inception', 'A thief who enters peoples dreams', 'Christopher Nolan', 2010, 148, 'Sci-Fi', 8.8, 'nyc6RJEEe0U', 'https://www.youtube.com/embed/nyc6RJEEe0U', TRUE, 31267),
+('Doctor Strange', 'A surgeon discovers the world of magic', 'Scott Derrickson', 2016, 115, 'Action', 7.5, 'LY7x2Ihqjmc', 'https://www.youtube.com/embed/LY7x2Ihqjmc', FALSE, 18921),
+('Avengers: Endgame', 'The final battle against Thanos', 'Russo Brothers', 2019, 181, 'Action', 8.4, 'TcMBFSGVi1c', 'https://www.youtube.com/embed/TcMBFSGVi1c', TRUE, 42156),
+('Spider-Man: No Way Home', 'Spider-Man faces multiverse chaos', 'Jon Watts', 2021, 148, 'Action', 8.2, 'JfVOs4VSpmA', 'https://www.youtube.com/embed/JfVOs4VSpmA', FALSE, 38945),
+('The Dark Knight', 'Batman faces the Joker', 'Christopher Nolan', 2008, 152, 'Action', 9.0, 'EXeTwQWrcwY', 'https://www.youtube.com/embed/EXeTwQWrcwY', TRUE, 51234),
+('Iron Man', 'Tony Stark becomes Iron Man', 'Jon Favreau', 2008, 126, 'Action', 7.9, '8ugaeA-nMTc', 'https://www.youtube.com/embed/8ugaeA-nMTc', FALSE, 29876),
+('Wonder Woman', 'Diana Prince discovers her powers', 'Patty Jenkins', 2017, 141, 'Action', 7.4, '1Q8fG0TtVAY', 'https://www.youtube.com/embed/1Q8fG0TtVAY', FALSE, 22134),
+('Black Widow', 'Natasha Romanoff confronts her past', 'Cate Shortland', 2021, 134, 'Action', 6.7, 'Fp9pNPdNwjI', 'https://www.youtube.com/embed/Fp9pNPdNwjI', FALSE, 16789),
+('Guardians of the Galaxy', 'A group of misfits save the galaxy', 'James Gunn', 2014, 121, 'Action', 8.0, 'd96cjJhvlMA', 'https://www.youtube.com/embed/d96cjJhvlMA', FALSE, 33421),
+('The Matrix', 'Neo discovers the truth about reality', 'Wachowski Sisters', 1999, 136, 'Sci-Fi', 8.7, 'vKQi3bBA1y8', 'https://www.youtube.com/embed/vKQi3bBA1y8', TRUE, 45678),
+('Blade Runner 2049', 'A young blade runner discovers secrets', 'Denis Villeneuve', 2017, 164, 'Sci-Fi', 8.0, 'gCcx85zbxz4', 'https://www.youtube.com/embed/gCcx85zbxz4', FALSE, 19234),
+('Dune', 'Paul Atreides journey on planet Arrakis', 'Denis Villeneuve', 2021, 155, 'Sci-Fi', 8.0, '8g18jFHCLXk', 'https://www.youtube.com/embed/8g18jFHCLXk', TRUE, 27543),
+('Mad Max: Fury Road', 'Post-apocalyptic action adventure', 'George Miller', 2015, 120, 'Action', 8.1, 'hEJnMQG9ev8', 'https://www.youtube.com/embed/hEJnMQG9ev8', FALSE, 21876),
+('John Wick', 'An ex-hitman seeks vengeance', 'Chad Stahelski', 2014, 101, 'Action', 7.4, 'C0BMx-qxsP4', 'https://www.youtube.com/embed/C0BMx-qxsP4', FALSE, 18765),
+('The Joker', 'Origin story of Gothams famous villain', 'Todd Phillips', 2019, 122, 'Drama', 8.4, 'zAGVQLHvwOY', 'https://www.youtube.com/embed/zAGVQLHvwOY', FALSE, 35421),
+('Parasite', 'A poor family infiltrates a rich household', 'Bong Joon-ho', 2019, 132, 'Thriller', 8.6, '5xH0HfJHsaY', 'https://www.youtube.com/embed/5xH0HfJHsaY', FALSE, 24567),
+('La La Land', 'A jazz musician and actress fall in love', 'Damien Chazelle', 2016, 128, 'Romance', 8.0, '0pdqf4P9MB8', 'https://www.youtube.com/embed/0pdqf4P9MB8', FALSE, 19876),
+('Top Gun: Maverick', 'Maverick returns to train new pilots', 'Joseph Kosinski', 2022, 131, 'Action', 8.3, 'qSqVVswa420', 'https://www.youtube.com/embed/qSqVVswa420', TRUE, 41234);
 
 -- Link Movies with Genres (Many-to-Many relationship)
 INSERT INTO movie_genres (movie_id, genre_id) VALUES 

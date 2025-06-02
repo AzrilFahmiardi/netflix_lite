@@ -33,7 +33,7 @@ CREATE TABLE movies (
     rating DECIMAL(3,1) DEFAULT 0.0,
     poster_url VARCHAR(500),
     trailer_youtube_id VARCHAR(50),
-    movie_youtube_id VARCHAR(50),
+    movie_url VARCHAR(500),
     language VARCHAR(50) DEFAULT 'English',
     subtitle_available BOOLEAN DEFAULT TRUE,
     is_featured BOOLEAN DEFAULT FALSE,

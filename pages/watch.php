@@ -75,7 +75,7 @@ $reviewsResult = $stmt->get_result();
                 <!-- Video Player -->
                 <div class="video-container">
                     <iframe 
-                        src="https://www.youtube.com/embed/<?= $movie['movie_youtube_id'] ? $movie['movie_youtube_id'] : $movie['trailer_youtube_id'] ?>?autoplay=1&controls=1&rel=0" 
+                        src="<?= $movie['movie_url'] ? $movie['movie_url'] . '?autoplay=1&controls=1&rel=0' : 'https://www.youtube.com/embed/' . $movie['trailer_youtube_id'] . '?autoplay=1&controls=1&rel=0' ?>" 
                         title="<?= $movie['title'] ?>"
                         frameborder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 

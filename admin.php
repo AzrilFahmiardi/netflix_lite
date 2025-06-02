@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $genre = $_POST['genre'];
         $rating = $_POST['rating'];
         $trailer_youtube_id = $_POST['trailer_youtube_id'];
-        $movie_youtube_id = $_POST['movie_youtube_id'];
+        $movie_url = $_POST['movie_url'];
         $is_featured = isset($_POST['is_featured']) ? 1 : 0;
         
         // Handle poster upload
@@ -42,8 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
         
-        $sql = "INSERT INTO movies (title, description, director, release_year, duration_minutes, genre, rating, trailer_youtube_id, movie_youtube_id, is_featured, poster_url) 
-                VALUES ('$title', '$description', '$director', '$release_year', '$duration_minutes', '$genre', '$rating', '$trailer_youtube_id', '$movie_youtube_id', '$is_featured', '$poster_url')";
+        $sql = "INSERT INTO movies (title, description, director, release_year, duration_minutes, genre, rating, trailer_youtube_id, movie_url, is_featured, poster_url) 
+                VALUES ('$title', '$description', '$director', '$release_year', '$duration_minutes', '$genre', '$rating', '$trailer_youtube_id', '$movie_url', '$is_featured', '$poster_url')";
         
         if ($conn->query($sql) === TRUE) {
             $movie_id = $conn->insert_id;
@@ -1435,8 +1435,9 @@ $reviewsCount = $result ? $result->fetch_assoc()['count'] : 0;
                                     <small class="form-hint">The ID in the YouTube URL: youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong></small>
                                 </div>
                                 <div class="form-group">
-                                    <label for="movie_youtube_id">YouTube Movie ID (optional):</label>
-                                    <input type="text" id="movie_youtube_id" name="movie_youtube_id" placeholder="YouTube ID for full movie">
+                                    <label for="movie_url">Movie YouTube URL:</label>
+                                    <input type="url" id="movie_url" name="movie_url" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+                                    <small class="form-hint">Full YouTube embed URL for the movie</small>
                                 </div>
                                 <div class="form-group">
                                     <div class="checkbox-wrapper">
