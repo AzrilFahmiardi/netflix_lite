@@ -256,6 +256,10 @@ a {
     font-weight: 500;
 }
 
+.movie-section {
+    scroll-margin-top: 100px;
+}
+
 
 
 /* Search Bar */
@@ -803,7 +807,3 @@ html {
     }
 }
 
-/* Section anchor offset for fixed navbar */
-.movie-section {
-    scroll-margin-top: 100px;
-}

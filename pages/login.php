@@ -77,60 +77,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="auth-container">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-5 col-md-7">
+                <div class="col-lg-5 col-md-7 col-sm-9">
                     <div class="auth-card">
-                        <div class="text-center mb-4">
-                            <a href="../index.php" class="navbar-brand mb-4 d-inline-block">
+                        <div class="text-center">
+                            <a href="../index.php" class="navbar-brand auth-brand">
                                 <i class="fas fa-play-circle"></i> StreamFlix
                             </a>
-                            <h2 class="gradient-text">Sign In</h2>
-                            <p class="text-light">Welcome back to StreamFlix</p>
+                            <h1 class="auth-title">Welcome Back</h1>
+                            <p class="auth-subtitle">Sign in to continue to StreamFlix</p>
                         </div>
                         
                         <?php if($error): ?>
                             <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-circle me-2"></i> <?= $error ?>
+                                <i class="fas fa-exclamation-triangle me-2"></i> <?= $error ?>
                             </div>
                         <?php endif; ?>
                         
                         <form action="login.php" method="post">
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <label for="username" class="form-label">Username or Email</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <input type="text" class="form-control" id="username" name="username" value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '' ?>" required autofocus>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <label for="password" class="form-label">Password</label>
-                                    <a href="forgot-password.php" class="small text-decoration-none">Forgot Password?</a>
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <input type="text" class="form-control" id="username" name="username" value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '' ?>" required autofocus placeholder="Enter your username or email">
                                 </div>
                             </div>
                             
                             <div class="mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
-                                    <label class="form-check-label text-light" for="remember_me">
-                                        Remember me
-                                    </label>
+                                <div class="d-flex justify-content-between">
+                                    <label for="password" class="form-label">Password</label>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+                                    <span class="input-group-text" onclick="togglePassword()" style="cursor:pointer;width:50px;">
+                                        <i class="fas fa-eye" id="toggleIcon"></i>
+                                    </span>
                                 </div>
                             </div>
                             
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary-gradient btn-lg">
-                                    Sign In
+                                <button type="submit" class="btn btn-primary-gradient btn-lg btn-auth">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
                                 </button>
                             </div>
                         </form>
                         
-                        <div class="text-center mt-4">
-                            <p class="text-light">Don't have an account? <a href="register.php" class="gradient-text text-decoration-none">Sign Up</a></p>
+                        <div class="text-center auth-footer">
+                            <p class="text-light m-0">Don't have an account? <a href="register.php" class="auth-link">Create Account</a></p>
                         </div>
                     </div>
                 </div>
@@ -140,5 +133,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
