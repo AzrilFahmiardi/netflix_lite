@@ -1,6 +1,11 @@
 <?php
 // Include database connection
 require_once('../config/database.php');
+// Include session check for authentication
+require_once('../components/session_check.php');
+
+// Require login for this page
+requireLogin();
 
 // Pagination settings
 $moviesPerPage = 6;

@@ -216,12 +216,45 @@ function getPosterUrl($movie) {
             </div>
             
             <div class="text-center mt-5">
-                <a href="pages/browse.php" class="btn btn-primary-gradient btn-lg">
-                    <i class="bi bi-play-circle me-2"></i>Browse All Content
-                </a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="pages/browse.php" class="btn btn-primary-gradient btn-lg">
+                        <i class="bi bi-play-circle me-2"></i>Browse All Content
+                    </a>
+                <?php else: ?>
+                    <button type="button" class="btn btn-primary-gradient btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="bi bi-play-circle me-2"></i>Browse All Content
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
     </section>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="loginModalLabel">Login Required</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-4">
+                        <i class="bi bi-lock-fill display-1 gradient-text"></i>
+                    </div>
+                    <h4>Please login to continue</h4>
+                    <p class="text-muted">You need to be logged in to browse our content library.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <a href="pages/login.php" class="btn btn-primary-gradient">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    <a href="pages/register.php" class="btn btn-outline-light">
+                        <i class="bi bi-person-plus me-2"></i>Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="py-5">
