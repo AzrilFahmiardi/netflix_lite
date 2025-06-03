@@ -1,17 +1,14 @@
 <?php
-// Include database connection
 require_once('../config/database.php');
 
-// Get search query
 $searchQuery = isset($_GET['q']) ? trim($_GET['q']) : '';
 
-// If no search query provided, redirect to browse page
 if (empty($searchQuery)) {
     header('Location: browse.php');
     exit;
 }
 
-// Get search results
+// search results
 $sql = "SELECT * FROM movies 
         WHERE title LIKE ? 
         OR description LIKE ? 
@@ -25,7 +22,7 @@ $stmt->execute();
 $searchResults = $stmt->get_result();
 $resultCount = $searchResults->num_rows;
 
-// Get all available genres for filter
+// all available genres for filter
 $genresQuery = "SELECT * FROM genres ORDER BY name";
 $genres = $conn->query($genresQuery);
 ?>

@@ -5,16 +5,13 @@ try {
     require_once('../config/database.php');
     require_once('../components/session_check.php');
     
-    // Check if user is logged in
     requireLogin();
     
-    // Check if request is POST
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit;
     }
     
-    // Get parameters
     $section = isset($_POST['section']) ? $_POST['section'] : 'trending';
     $page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;
     
@@ -27,7 +24,7 @@ try {
     $pageParam = '';
     $sectionId = '';
     
-    // Function to generate pagination
+    // Generate pagination
     function generatePagination($currentPage, $totalPages, $pageParam, $sectionId) {
         if ($totalPages <= 1) return '';
         
@@ -100,7 +97,6 @@ try {
         return $pagination;
     }
     
-    // Process different section types
     if ($section === 'trending') {
         // Trending Movies
         $countQuery = "SELECT COUNT(*) as total FROM movies";
@@ -128,9 +124,8 @@ try {
         $sectionId = 'newest-section';
     } 
     else {
-        // Try to treat the section as a genre slug
         $genreSlug = $section;
-        $genreName = str_replace('-', ' ', $genreSlug); // Convert slug to name format
+        $genreName = str_replace('-', ' ', $genreSlug); 
         
         // Query genre by name
         $genreQuery = "SELECT id, name FROM genres WHERE LOWER(REPLACE(name, ' ', '-')) = ? OR LOWER(name) = ?";
@@ -146,7 +141,6 @@ try {
             $genreId = $genre['id'];
             $actualGenreName = $genre['name'];
             
-            // Count total for this genre
             $countQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
                          JOIN movie_genres mg ON m.id = mg.movie_id 
                          JOIN genres g ON mg.genre_id = g.id 
@@ -157,7 +151,6 @@ try {
             $total = $stmt->get_result()->fetch_assoc()['total'];
             $totalPages = ceil($total / $moviesPerPage);
             
-            // Get movies for this genre
             $moviesQuery = "SELECT m.* FROM movies m 
                           JOIN movie_genres mg ON m.id = mg.movie_id 
                           JOIN genres g ON mg.genre_id = g.id 
@@ -169,11 +162,9 @@ try {
             $stmt->execute();
             $movies = $stmt->get_result();
             
-            // Set appropriate page param and section ID
             $pageParam = strtolower(str_replace(' ', '_', $actualGenreName)) . '_page';
             $sectionId = $genreSlug . '-section';
         } else {
-            // Fallback to trending if genre not found
             $countQuery = "SELECT COUNT(*) as total FROM movies";
             $countResult = $conn->query($countQuery);
             $total = $countResult->fetch_assoc()['total'];
@@ -192,7 +183,6 @@ try {
     ?>
     <div class="row g-4">
         <?php while($movie = $movies->fetch_assoc()): 
-            // Simple direct poster URL handling without helpers or YouTube fallback
             $posterUrl = !empty($movie['poster_url']) ? 
                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
                 '../assets/images/default-poster.jpg';

@@ -1,13 +1,12 @@
 <?php
-// Include database connection
 require_once('../config/database.php');
 
 $error = '';
 $success = '';
 
-// Process registration form submission
+// Registration form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get user inputs
+    // user inputs
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
@@ -16,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $last_name = trim($_POST['last_name']);
     $country = isset($_POST['country']) ? trim($_POST['country']) : 'Indonesia';
     
-    // Basic validation
+    // validation
     if (empty($username) || empty($email) || empty($password) || empty($first_name) || empty($last_name)) {
         $error = "All fields are required";
     } elseif ($password !== $confirm_password) {
@@ -26,13 +25,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters long";
     } else {
-        // Check if username already exists
         $check_username = $conn->prepare("SELECT id FROM users WHERE username = ?");
         $check_username->bind_param("s", $username);
         $check_username->execute();
         $check_username->store_result();
         
-        // Check if email already exists
         $check_email = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $check_email->bind_param("s", $email);
         $check_email->execute();
@@ -46,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Hash password
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             
-            // Insert new user into database
             $insert_user = $conn->prepare("INSERT INTO users (username, email, password, first_name, last_name, country, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())");
             $insert_user->bind_param("ssssss", $username, $email, $hashed_password, $first_name, $last_name, $country);
             
@@ -59,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// List of countries for dropdown
+// List of countries
 $countries = [
     "Indonesia", "United States", "United Kingdom", "Canada", "Australia",
     "Singapore", "Malaysia", "Japan", "South Korea", "India", "Germany",

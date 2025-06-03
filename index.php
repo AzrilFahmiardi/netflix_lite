@@ -1,30 +1,22 @@
 <?php
-// Include database connection
 require_once('config/database.php');
 
-// Start session for login check
 session_start();
 
-// Check if user is logged in
 $isLoggedIn = isset($_SESSION['user_id']) && isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 $userName = $isLoggedIn ? $_SESSION['name'] : '';
 $userInitial = $isLoggedIn ? substr($_SESSION['name'], 0, 1) : '';
 
-// Get trending movies for preview section
 $trendingQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT 4";
 $trendingMovies = $conn->query($trendingQuery);
 
-// Helper function for poster URLs
 function getPosterUrl($movie) {
     if (!empty($movie['poster_url'])) {
-        // If URL starts with http, it's external
         if (strpos($movie['poster_url'], 'http') === 0) {
             return $movie['poster_url'];
         }
-        // Otherwise it's a local path
         return $movie['poster_url'];
     }
-    // Fallback to YouTube thumbnail
     return 'https://img.youtube.com/vi/' . $movie['trailer_youtube_id'] . '/mqdefault.jpg';
 }
 ?>
@@ -151,7 +143,6 @@ function getPosterUrl($movie) {
                 <?php 
                     endwhile;
                 else:
-                    // Fallback to static content if no movies in database
                 ?>
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="movie-card">
@@ -237,9 +228,9 @@ function getPosterUrl($movie) {
                     <h5 class="modal-title" id="loginModalLabel">Login Required</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center py-4">
-                    <div class="mb-4">
-                        <i class="bi bi-lock-fill display-1 gradient-text"></i>
+                <div class="modal-body text-center">
+                    <div >
+                        <i class="bi bi-person-fill-lock display-1 gradient-text" ></i>
                     </div>
                     <h4>Please login to continue</h4>
                     <p class="text-muted">You need to be logged in to browse our content library.</p>

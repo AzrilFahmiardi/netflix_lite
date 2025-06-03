@@ -1,18 +1,14 @@
 <?php
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in
 $isLoggedIn = isset($_SESSION['user_id']) && isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 $userName = $isLoggedIn ? $_SESSION['name'] : '';
 $userInitial = $isLoggedIn ? substr($_SESSION['name'], 0, 1) : '';
 
-// Determine current page for active menu state
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 
-// Fix path relativity issue - determine if we are in pages directory
 $isInPagesDir = strpos($_SERVER['PHP_SELF'], '/pages/') !== false;
 $rootPath = $isInPagesDir ? '../' : '';
 ?>

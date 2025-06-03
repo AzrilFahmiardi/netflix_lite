@@ -1,5 +1,4 @@
 <?php
-// Determine if we are in root directory or pages directory for correct paths
 $rootPath = '';
 if (strpos($_SERVER['SCRIPT_NAME'], '/pages/') !== false) {
     $rootPath = '../';

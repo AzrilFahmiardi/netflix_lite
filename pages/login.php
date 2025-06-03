@@ -1,23 +1,18 @@
 <?php
-// Start session
 session_start();
 
-// Include database connection
 require_once('../config/database.php');
 
 $error = '';
 
-// Process login form submission
+// Login form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get user inputs
     $username = trim($_POST['username']);
     $password = $_POST['password'];
     
-    // Check if fields are empty
     if (empty($username) || empty($password)) {
         $error = "Please enter both username and password";
     } else {
-        // Prepare SQL statement to prevent SQL injection
         $stmt = $conn->prepare("SELECT id, username, password, first_name, last_name FROM users WHERE username = ? OR email = ?");
         $stmt->bind_param("ss", $username, $username);
         $stmt->execute();
@@ -28,25 +23,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Verify password
             if (password_verify($password, $user['password'])) {
-                // Password is correct, set session variables
+                // Set session 
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['name'] = $user['first_name'] . " " . $user['last_name'];
                 $_SESSION['logged_in'] = true;
-                
-                // Update last login time (using created_at instead of last_login)
-                // Check if last_login column exists in the table
+
                 $checkColumn = $conn->query("SHOW COLUMNS FROM users LIKE 'last_login'");
                 if ($checkColumn->num_rows > 0) {
-                    // If column exists, update it
                     $update_stmt = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
                     $update_stmt->bind_param("i", $user['id']);
                     $update_stmt->execute();
                 } else {
-                    // If column doesn't exist, we can update created_at instead or skip this step
-                    // $conn->query("ALTER TABLE users ADD COLUMN last_login DATETIME");
+
                 }
-                
                 // Redirect to browse page
                 header("Location: browse.php");
                 exit;

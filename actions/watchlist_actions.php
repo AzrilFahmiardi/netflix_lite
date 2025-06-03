@@ -1,14 +1,10 @@
 <?php
-// Include session check
 require_once('../components/session_check.php');
 
-// Require user to be logged in
 requireLogin();
 
-// Include database connection
 require_once('../config/database.php');
 
-// Initialize response array
 $response = [
     'success' => false,
     'message' => 'An error occurred'
@@ -22,7 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     $movie_id = isset($_POST['movie_id']) ? (int)$_POST['movie_id'] : 0;
     
-    // Perform action based on the request
     switch ($action) {
         case 'add_to_watchlist':
             // Add movie to watchlist
@@ -51,11 +46,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $rating = isset($_POST['rating']) ? (int)$_POST['rating'] : 0;
             $review_text = isset($_POST['review_text']) ? $_POST['review_text'] : '';
             
-            // Check if the user has already reviewed this movie
             $check_review = $conn->query("SELECT * FROM user_reviews WHERE user_id = '$user_id' AND movie_id = '$movie_id'");
             
             if ($check_review && $check_review->num_rows > 0) {
-                // Update existing review
                 $sql = "UPDATE user_reviews SET rating = '$rating', review_text = '$review_text' WHERE user_id = '$user_id' AND movie_id = '$movie_id'";
                 if ($conn->query($sql) === TRUE) {
                     $response['success'] = true;

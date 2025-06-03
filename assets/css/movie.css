@@ -110,7 +110,7 @@
     margin-right: 5px;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 1199px) {
     .movie-title {
         font-size: 2.8rem;

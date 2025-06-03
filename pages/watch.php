@@ -1,8 +1,6 @@
 <?php
-// Include database connection
 require_once('../config/database.php');
 
-// Get movie ID from URL
 if (!isset($_GET['id'])) {
     header('Location: browse.php');
     exit;
@@ -10,7 +8,7 @@ if (!isset($_GET['id'])) {
 
 $movieId = $_GET['id'];
 
-// Get movie details
+// movie details
 $sql = "SELECT * FROM movies WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $movieId);
@@ -18,7 +16,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $movie = $result->fetch_assoc();
 
-// If movie doesn't exist, redirect to browse page
 if (!$movie) {
     header('Location: browse.php');
     exit;
@@ -30,7 +27,7 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $movieId);
 $stmt->execute();
 
-// Get movie cast - using the same approach as in movie.php
+// movie cast 
 $sql = "SELECT cc.name, cc.role, mcc.role_in_movie, mcc.character_name 
         FROM cast_crew cc
         JOIN movie_cast_crew mcc ON cc.id = mcc.person_id
@@ -40,7 +37,7 @@ $stmt->bind_param("i", $movieId);
 $stmt->execute();
 $castResult = $stmt->get_result();
 
-// Get movie reviews - same as movie.php
+// movie reviews
 $sql = "SELECT ur.*, u.username, u.first_name, u.last_name
         FROM user_reviews ur
         JOIN users u ON ur.user_id = u.id
@@ -168,7 +165,7 @@ $reviewsResult = $stmt->get_result();
         </div>
     </div>
     
-    <!-- Add Review Modal -->
+    <!-- Review Modal -->
     <div class="modal fade" id="addReviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content bg-dark text-light">

@@ -1,17 +1,13 @@
 <?php
-// Include session check
 require_once('../components/session_check.php');
 
-// Require user to be logged in
 requireLogin();
 
-// Include database connection
 require_once('../config/database.php');
 
-// Get user ID from session
 $user_id = getCurrentUserId();
 
-// Get user details from database
+// user details
 $sql = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -19,7 +15,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
-// Get user's review count
+// user's review count
 $sql = "SELECT COUNT(*) as review_count FROM user_reviews WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -27,7 +23,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $review_count = $result->fetch_assoc()['review_count'];
 
-// Handle profile update
 $message = '';
 $message_type = '';
 
@@ -37,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $email = trim($_POST['email']);
     $country = trim($_POST['country']);
     
-    // Check if email is already in use by another user
     $check_sql = "SELECT id FROM users WHERE email = ? AND id != ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_stmt->bind_param("si", $email, $user_id);
@@ -60,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             // Update session name
             $_SESSION['name'] = $first_name . ' ' . $last_name;
             
-            // Refresh user data
             $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
@@ -79,13 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
     
-    // Verify current password
     if (password_verify($current_password, $user['password'])) {
-        // Check if new passwords match
         if ($new_password === $confirm_password) {
-            // Check password length
             if (strlen($new_password) >= 6) {
-                // Hash new password and update
                 $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
                 $update_sql = "UPDATE users SET password = ? WHERE id = ?";
                 $update_stmt = $conn->prepare($update_sql);
@@ -112,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 
-// Recent activity: Get user's recent reviews
+// Recent activity
 $sql = "SELECT r.*, m.title, m.poster_url, m.trailer_youtube_id
         FROM user_reviews r
         JOIN movies m ON r.movie_id = m.id
@@ -256,7 +245,6 @@ $recent_reviews = $stmt->get_result();
     <?php include_once('../components/navbar.php'); ?>
     
     <div class="container mt-5 pt-5">
-        <!-- Display messages if any -->
         <?php if ($message): ?>
             <div class="alert alert-<?= $message_type === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show" role="alert">
                 <?= $message ?>

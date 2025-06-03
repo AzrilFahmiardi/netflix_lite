@@ -171,7 +171,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Make placeholders more visible */
 ::placeholder {
     color: rgba(255, 255, 255, 0.7) !important;
     opacity: 1;
@@ -185,7 +184,6 @@
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Hide social login elements when needed */
 .social-login, .auth-divider {
     display: none;
 }

@@ -1,8 +1,6 @@
 <?php
-// Include database connection
 require_once('../config/database.php');
 
-// Get movie ID from URL
 if (!isset($_GET['id'])) {
     header('Location: browse.php');
     exit;
@@ -10,7 +8,7 @@ if (!isset($_GET['id'])) {
 
 $movieId = $_GET['id'];
 
-// Get movie details
+// movie details
 $sql = "SELECT * FROM movies WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $movieId);
@@ -18,13 +16,12 @@ $stmt->execute();
 $result = $stmt->get_result();
 $movie = $result->fetch_assoc();
 
-// If movie doesn't exist, redirect to browse page
 if (!$movie) {
     header('Location: browse.php');
     exit;
 }
 
-// Get movie genres
+// movie genres
 $sql = "SELECT g.name FROM genres g 
         JOIN movie_genres mg ON g.id = mg.genre_id 
         WHERE mg.movie_id = ?";
@@ -33,7 +30,7 @@ $stmt->bind_param("i", $movieId);
 $stmt->execute();
 $genreResult = $stmt->get_result();
 
-// Get movie cast
+// movie cast
 $sql = "SELECT cc.name, cc.role, mcc.role_in_movie, mcc.character_name 
         FROM cast_crew cc
         JOIN movie_cast_crew mcc ON cc.id = mcc.person_id
@@ -43,7 +40,7 @@ $stmt->bind_param("i", $movieId);
 $stmt->execute();
 $castResult = $stmt->get_result();
 
-// Get movie reviews
+// movie reviews
 $sql = "SELECT ur.*, u.username, u.first_name, u.last_name
         FROM user_reviews ur
         JOIN users u ON ur.user_id = u.id
@@ -80,12 +77,10 @@ $stmt->execute();
     
     <!-- Movie Hero Section -->
     <?php 
-    // Simple direct poster URL handling without YouTube fallback
     $posterUrl = !empty($movie['poster_url']) ? 
         (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
         '../assets/images/default-poster.jpg';
     
-    // For background image
     $bgImageUrl = $posterUrl;
     ?>
     <div class="movie-hero" style="background-image: linear-gradient(to bottom, rgba(15, 15, 35, 0.8), rgba(15, 15, 35, 0.97)), url(<?= $bgImageUrl ?>);">
@@ -202,7 +197,7 @@ $stmt->execute();
     <!-- Footer -->
     <?php include_once('../components/footer.php'); ?>
 
-    <!-- Add Review Modal -->
+    <!-- Review Modal -->
     <div class="modal fade" id="addReviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content bg-dark text-light">

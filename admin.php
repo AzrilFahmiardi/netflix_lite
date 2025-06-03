@@ -1,11 +1,9 @@
 <?php
-// Include database connection
 require_once('config/database.php');
 
-// Process form submissions
 $formMessage = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Add Movie with poster upload functionality
+    // Add Movie
     if (isset($_POST['add_movie'])) {
         $title = $_POST['title'];
         $description = $_POST['description'];
@@ -29,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $new_filename = uniqid() . '.' . $ext;
                 $upload_dir = 'assets/images/posters/';
                 
-                // Create directory if it doesn't exist
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0755, true);
                 }
@@ -49,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $movie_id = $conn->insert_id;
             $formMessage = "<div class='alert success'><i class='fas fa-check-circle'></i> Movie added successfully!</div>";
             
-            // Add genres if selected
             if (isset($_POST['genres']) && is_array($_POST['genres'])) {
                 foreach ($_POST['genres'] as $genre_id) {
                     $sql = "INSERT INTO movie_genres (movie_id, genre_id) VALUES ('$movie_id', '$genre_id')";
@@ -110,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Update Movie with poster upload functionality
+    // Update Movie
     if (isset($_POST['update_movie'])) {
         $id = $_POST['movie_id'];
         $title = $_POST['title'];
@@ -120,7 +116,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $duration_minutes = $_POST['duration_minutes'];
         $is_featured = isset($_POST['is_featured']) ? 1 : 0;
         
-        // Handle poster upload
         $poster_sql = '';
         if (isset($_FILES['poster']) && $_FILES['poster']['error'] == 0) {
             $allowed = ['jpg', 'jpeg', 'png', 'webp'];
@@ -128,11 +123,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             
             if (in_array($ext, $allowed)) {
-                // Create a unique filename - simplified to just use the unique ID
                 $new_filename = uniqid() . '.' . $ext;
                 $upload_dir = 'assets/images/posters/';
                 
-                // Create directory if it doesn't exist
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0755, true);
                 }
@@ -140,7 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $upload_path = $upload_dir . $new_filename;
                 
                 if (move_uploaded_file($_FILES['poster']['tmp_name'], $upload_path)) {
-                    // Delete the old poster if exists
                     $old_poster_query = "SELECT poster_url FROM movies WHERE id = '$id'";
                     $old_poster_result = $conn->query($old_poster_query);
                     if ($old_poster_result && $old_poster_result->num_rows > 0) {
@@ -196,12 +188,10 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
         
         switch ($type) {
             case 'movie':
-                // First delete related records from junction tables
                 $conn->query("DELETE FROM movie_genres WHERE movie_id = '$id'");
                 $conn->query("DELETE FROM movie_cast_crew WHERE movie_id = '$id'");
                 $conn->query("DELETE FROM user_reviews WHERE movie_id = '$id'");
                 
-                // Then delete the movie
                 $sql = "DELETE FROM movies WHERE id = '$id'";
                 if ($conn->query($sql) === TRUE) {
                     $formMessage = "<div class='alert success'><i class='fas fa-check-circle'></i> Movie deleted successfully!</div>";
@@ -211,7 +201,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
                 break;
                 
             case 'genre':
-                // Check if this genre is used in any movies
                 $result = $conn->query("SELECT COUNT(*) as count FROM movie_genres WHERE genre_id = '$id'");
                 $row = $result->fetch_assoc();
                 
@@ -228,7 +217,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
                 break;
                 
             case 'cast':
-                // Check if this cast/crew member is used in any movies
                 $result = $conn->query("SELECT COUNT(*) as count FROM movie_cast_crew WHERE person_id = '$id'");
                 $row = $result->fetch_assoc();
                 
@@ -705,7 +693,7 @@ $reviewsCount = $result ? $result->fetch_assoc()['count'] : 0;
                 </div>
             </div>
             
-            <!-- Users Tab - View Only -->
+            <!-- Users Tab -->
             <div id="users" class="tab-content">
                 <div class="card">
                     <div class="card-header">
@@ -754,9 +742,8 @@ $reviewsCount = $result ? $result->fetch_assoc()['count'] : 0;
         </div>
     </div>
     
-    <!-- MODAL OVERLAYS -->
     
-    <!-- Add Movie Modal -->
+    <!-- Movie Modal -->
     <div id="add-movie-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -861,7 +848,6 @@ $reviewsCount = $result ? $result->fetch_assoc()['count'] : 0;
                 <span class="close" onclick="closeModal('edit-movie-modal')">&times;</span>
             </div>
             <div class="modal-body" id="edit-movie-form-container">
-                <!-- This will be populated via AJAX -->
                 <div class="loading">
                     <i class="fas fa-spinner fa-spin"></i> Loading movie data...
                 </div>

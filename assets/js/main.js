@@ -1,7 +1,3 @@
-/**
- * StreamFlix - Main JavaScript
- */
-
 // Loading overlay functions
 function showLoading() {
     const loadingOverlay = document.getElementById('loadingOverlay') || createLoadingOverlay();
@@ -43,7 +39,6 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
     toastContainer.appendChild(toast);
     
-    // Trigger reflow to allow transition to work
     toast.offsetHeight;
     
     toast.classList.add('show');
@@ -52,7 +47,7 @@ function showToast(message, type = 'info', duration = 3000) {
         toast.classList.remove('show');
         setTimeout(() => {
             toastContainer.removeChild(toast);
-        }, 300); // Wait for the fade-out transition to complete
+        }, 300); 
     }, duration);
 }
 
@@ -75,11 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleWatchlist(movieId, button) {
     showLoading();
     
-    // In a real app, this would be an AJAX call to your server
     setTimeout(() => {
         hideLoading();
         
-        // Toggle button state (this is just for demo)
         if (button.innerHTML.includes('Add to')) {
             button.innerHTML = '<i class="fas fa-check me-2"></i>Added to Watchlist';
             button.classList.replace('btn-secondary', 'btn-success');
@@ -91,8 +84,6 @@ function toggleWatchlist(movieId, button) {
         }
     }, 800);
 }
-
-// Main JavaScript functionality for Netflix Lite
 
 // Navbar scroll effect
 window.addEventListener('scroll', function() {
@@ -143,15 +134,12 @@ function searchMovies() {
     if (searchInput) {
         const query = searchInput.value;
         if (query.trim()) {
-            // If we're already on a page in the pages directory
             if (window.location.pathname.includes('/pages/')) {
                 window.location.href = `search.php?q=${encodeURIComponent(query)}`;
             } else {
-                // If we're on the root index page
                 window.location.href = `pages/search.php?q=${encodeURIComponent(query)}`;
             }
         } else {
-            // Go to search page without query
             if (window.location.pathname.includes('/pages/')) {
                 window.location.href = 'search.php';
             } else {
@@ -161,7 +149,6 @@ function searchMovies() {
     }
 }
 
-// Add search functionality to any search input on page load
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -345,15 +332,12 @@ function removeFromLocalStorage(key) {
 function fixImagePath(path) {
     if (!path) return '';
     
-    // If it's an absolute URL (starts with http/https), return as is
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
     
-    // Check if we need to go up one directory level based on current path
     const inPagesDirectory = window.location.pathname.includes('/pages/');
     
-    // If we're in the pages subdirectory, we need to go up one level
     if (inPagesDirectory && !path.startsWith('../')) {
         return '../' + path;
     }
@@ -361,21 +345,16 @@ function fixImagePath(path) {
     return path;
 }
 
-// Ensure all movie poster images load properly
 document.addEventListener('DOMContentLoaded', function() {
-    // Fix all movie poster images
     document.querySelectorAll('.movie-card img').forEach(img => {
         img.onerror = function() {
-            // If image fails to load, replace with a placeholder
             this.src = fixImagePath('assets/images/placeholder.jpg');
         };
         
-        // If the image has a data-src attribute, use that as the real source
         if (img.getAttribute('data-src')) {
             img.src = fixImagePath(img.getAttribute('data-src'));
         }
         
-        // Make sure the image src is properly formatted
         if (img.src && !img.src.startsWith('http')) {
             img.src = fixImagePath(img.src);
         }
@@ -384,13 +363,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Initialize popovers
     const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);

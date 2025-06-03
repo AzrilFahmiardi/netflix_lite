@@ -1,5 +1,4 @@
 <?php
-// Include database connection - adjust path since file is now in components folder
 require_once('../config/database.php');
 
 if(isset($_GET['id'])) {
@@ -75,12 +74,9 @@ if(isset($_GET['id'])) {
 </form>
 
 <script>
-// Handle form submission with AJAX to prevent page reload
+// AJAX Form Submission
 document.getElementById('edit-movie-form').addEventListener('submit', function(e) {
-    // We're keeping the normal form submission which will properly handle the file upload
-    // Just adding measures to prevent duplicate submissions
-    
-    // Close the modal after submitting
+
     setTimeout(function() {
         closeModal('edit-movie-modal');
     }, 500);

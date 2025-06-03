@@ -1,10 +1,7 @@
 <?php
-// Include database connection
 require_once('../config/database.php');
-// Include session check for authentication
 require_once('../components/session_check.php');
 
-// Require login for this page
 requireLogin();
 
 // Get all available genres
@@ -14,14 +11,13 @@ $allGenres = [];
 while ($genreRow = $genres->fetch_assoc()) {
     $allGenres[] = $genreRow;
 }
-$genres->data_seek(0); // Reset pointer for later use
+$genres->data_seek(0); 
 
 // Pagination settings
 $moviesPerPage = 6;
 $trendingPage = isset($_GET['trending_page']) ? max(1, (int)$_GET['trending_page']) : 1;
 $newestPage = isset($_GET['newest_page']) ? max(1, (int)$_GET['newest_page']) : 1;
 
-// Dynamic genre pagination settings
 $genrePages = [];
 foreach ($allGenres as $genre) {
     $paramName = strtolower(str_replace(' ', '_', $genre['name'])) . '_page';
@@ -33,16 +29,16 @@ foreach ($allGenres as $genre) {
     ];
 }
 
-// Calculate offset for each section
+// Calculate offset
 $trendingOffset = ($trendingPage - 1) * $moviesPerPage;
 $newestOffset = ($newestPage - 1) * $moviesPerPage;
 
-// Get featured movies for hero section
+// Fetured movie
 $featuredQuery = "SELECT * FROM movies WHERE is_featured = TRUE ORDER BY view_count DESC LIMIT 1";
 $featuredResult = $conn->query($featuredQuery);
 $featuredMovie = $featuredResult->fetch_assoc();
 
-// Get total counts for pagination
+// Total counts for pagination
 $trendingCountQuery = "SELECT COUNT(*) as total FROM movies";
 $trendingCountResult = $conn->query($trendingCountQuery);
 $trendingTotal = $trendingCountResult->fetch_assoc()['total'];
@@ -53,7 +49,7 @@ $newestCountResult = $conn->query($newestCountQuery);
 $newestTotal = $newestCountResult->fetch_assoc()['total'];
 $newestTotalPages = ceil($newestTotal / $moviesPerPage);
 
-// Calculate genre counts and fetch movies for each genre
+// Fenre counts and fetch movies for each genre
 $genreMovies = [];
 $genreTotalPages = [];
 
@@ -63,7 +59,6 @@ foreach ($allGenres as $genre) {
     $genrePage = $genrePages[$genreId]['page'];
     $genreOffset = ($genrePage - 1) * $moviesPerPage;
     
-    // Count total movies for this genre
     $countQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
                  JOIN movie_genres mg ON m.id = mg.movie_id 
                  JOIN genres g ON mg.genre_id = g.id 
@@ -72,7 +67,6 @@ foreach ($allGenres as $genre) {
     $total = $countResult->fetch_assoc()['total'];
     $genreTotalPages[$genreId] = ceil($total / $moviesPerPage);
     
-    // Get movies for this genre
     $moviesQuery = "SELECT m.* FROM movies m 
                   JOIN movie_genres mg ON m.id = mg.movie_id 
                   JOIN genres g ON mg.genre_id = g.id 
@@ -89,7 +83,7 @@ $trendingMovies = $conn->query($trendingQuery);
 $newestQuery = "SELECT * FROM movies ORDER BY release_year DESC LIMIT $moviesPerPage OFFSET $newestOffset";
 $newestMovies = $conn->query($newestQuery);
 
-// Function to generate Bootstrap pagination with simple AJAX
+// Generate AJAX pagination
 function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $otherParams = []) {
     if ($totalPages <= 1) return '';
     
@@ -182,7 +176,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
     
     <!-- Hero Section - Featured Movie -->
     <?php if($featuredMovie): 
-        // Simple direct poster URL handling without helpers or YouTube fallback
         $posterUrl = !empty($featuredMovie['poster_url']) ? 
             (strpos($featuredMovie['poster_url'], 'http') === 0 ? $featuredMovie['poster_url'] : '../' . $featuredMovie['poster_url']) : 
             '../assets/images/default-poster.jpg';
@@ -196,7 +189,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                     <span class="hero-badge"><?= $featuredMovie['release_year'] ?></span>
                     <span class="hero-badge"><?= $featuredMovie['duration_minutes'] ?> min</span>
                     <?php 
-                    // Get genres for this movie
                     $movieGenresQuery = "SELECT g.name FROM genres g JOIN movie_genres mg ON g.id = mg.genre_id WHERE mg.movie_id = " . $featuredMovie['id'] . " LIMIT 2";
                     $movieGenres = $conn->query($movieGenresQuery);
                     if($movieGenres):
@@ -258,7 +250,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="trending-content">
                     <div class="row g-4">
                         <?php while($movie = $trendingMovies->fetch_assoc()): 
-                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
                                 '../assets/images/default-poster.jpg';
@@ -286,7 +277,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                     </div>
                 </div>
                 <?php
-                // Prepare all page params for pagination
                 $allPageParams = [];
                 foreach ($genrePages as $genreId => $genreInfo) {
                     $allPageParams[$genreInfo['param']] = $genreInfo['page'];
@@ -300,7 +290,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="newest-content">
                     <div class="row g-4">
                         <?php while($movie = $newestMovies->fetch_assoc()): 
-                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
                                 '../assets/images/default-poster.jpg';
@@ -338,7 +327,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 $genrePage = $genrePages[$genreId]['page'];
                 $genreParam = $genrePages[$genreId]['param'];
                 
-                // Skip if there's no movies for this genre
                 if ($genreTotalPages[$genreId] == 0) continue;
                 
                 $movies = $genreMovies[$genreId];
@@ -348,7 +336,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 <div class="movie-slider" id="<?= $genreSlug ?>-content">
                     <div class="row g-4">
                         <?php while($movies && $movie = $movies->fetch_assoc()): 
-                            // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
                                 '../assets/images/default-poster.jpg';
@@ -389,9 +376,8 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/main.js"></script>
     <script>
-    // Simple AJAX Pagination
+    // AJAX Pagination
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle pagination clicks
         document.addEventListener('click', function(e) {
             if (e.target.closest('.ajax-pagination')) {
                 e.preventDefault();
@@ -412,11 +398,9 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
             const contentDiv = section.querySelector('.movie-slider');
             const paginationDiv = section.querySelector('.pagination').closest('nav');
             
-            // Add loading state
             section.style.opacity = '0.6';
             section.style.pointerEvents = 'none';
             
-            // Scroll to section
             const navbarHeight = 80;
             const sectionTop = section.offsetTop - navbarHeight;
             window.scrollTo({
@@ -424,12 +408,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                 behavior: 'smooth'
             });
             
-            // Prepare form data
             const formData = new FormData();
             formData.append('section', getSectionType(pageParam));
             formData.append('page', page);
             
-            // Make AJAX request
             fetch('../components/browse_load_section.php', {
                 method: 'POST',
                 body: formData
@@ -437,11 +419,9 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update content
                     contentDiv.innerHTML = data.content;
                     paginationDiv.outerHTML = data.pagination;
                     
-                    // Update URL without refresh
                     const url = new URL(window.location);
                     url.searchParams.set(pageParam, page);
                     history.replaceState(null, '', url);
@@ -449,14 +429,12 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                     console.error('Error:', data.message);
                 }
                 
-                // Remove loading state
                 section.style.opacity = '1';
                 section.style.pointerEvents = 'auto';
             })
             .catch(error => {
                 console.error('Network error:', error);
                 
-                // Remove loading state
                 section.style.opacity = '1';
                 section.style.pointerEvents = 'auto';
             });
@@ -466,9 +444,7 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
             if (pageParam === 'trending_page') return 'trending';
             if (pageParam === 'newest_page') return 'newest';
             
-            // Better handling for dynamic genre page params
             if (pageParam.endsWith('_page')) {
-                // Extract genre name and convert to slug format for the section parameter
                 const genreName = pageParam.replace('_page', '');
                 const genreSlug = genreName.replace(/_/g, '-');
                 return genreSlug;
