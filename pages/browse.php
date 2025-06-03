@@ -233,7 +233,7 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex justify-content-md-end">
-                            <div class="dropdown me-2">
+                            <div class="dropdown">
                                 <button class="btn btn-dark dropdown-toggle" type="button" id="genreDropdown" data-bs-toggle="dropdown">
                                     Genre
                                 </button>
@@ -245,16 +245,6 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                                     ?>
                                         <li><a class="dropdown-item" href="browse.php?genre=<?= $genre['id'] ?>"><?= $genre['name'] ?></a></li>
                                     <?php endwhile; ?>
-                                </ul>
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn btn-dark dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
-                                    Sort By
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="sortDropdown">
-                                    <li><a class="dropdown-item" href="browse.php?sort=trending">Trending</a></li>
-                                    <li><a class="dropdown-item" href="browse.php?sort=newest">Newest</a></li>
-                                    <li><a class="dropdown-item" href="browse.php?sort=rating">Rating</a></li>
                                 </ul>
                             </div>
                         </div>
