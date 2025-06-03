@@ -8,17 +8,24 @@ try {
     // Check if user is logged in
     requireLogin();
     
-    // Check if request is AJAX
-    if (empty($_POST['section']) || empty($_POST['page'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid request parameters']);
+    // Check if request is POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit;
     }
     
     // Get parameters
-    $section = $_POST['section'];
-    $page = max(1, (int)$_POST['page']);
+    $section = isset($_POST['section']) ? $_POST['section'] : 'trending';
+    $page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;
+    
     $moviesPerPage = 6;
     $offset = ($page - 1) * $moviesPerPage;
+    
+    // Initialize variables
+    $movies = null;
+    $totalPages = 0;
+    $pageParam = '';
+    $sectionId = '';
     
     // Function to generate pagination
     function generatePagination($currentPage, $totalPages, $pageParam, $sectionId) {
@@ -93,60 +100,92 @@ try {
         return $pagination;
     }
     
-    // Get movies based on section type
-    switch ($section) {
-        case 'trending':
-            $countQuery = "SELECT COUNT(*) as total FROM movies";
-            $query = "SELECT * FROM movies ORDER BY view_count DESC LIMIT $moviesPerPage OFFSET $offset";
-            $pageParam = 'trending_page';
-            $sectionId = 'trending-section';
-            break;
-        case 'newest':
-            $countQuery = "SELECT COUNT(*) as total FROM movies";
-            $query = "SELECT * FROM movies ORDER BY release_year DESC LIMIT $moviesPerPage OFFSET $offset";
-            $pageParam = 'newest_page';
-            $sectionId = 'newest-section';
-            break;
-        case 'action':
+    // Process different section types
+    if ($section === 'trending') {
+        // Trending Movies
+        $countQuery = "SELECT COUNT(*) as total FROM movies";
+        $countResult = $conn->query($countQuery);
+        $total = $countResult->fetch_assoc()['total'];
+        $totalPages = ceil($total / $moviesPerPage);
+        
+        $moviesQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT $moviesPerPage OFFSET $offset";
+        $movies = $conn->query($moviesQuery);
+        
+        $pageParam = 'trending_page';
+        $sectionId = 'trending-section';
+    } 
+    else if ($section === 'newest') {
+        // Newest Movies
+        $countQuery = "SELECT COUNT(*) as total FROM movies";
+        $countResult = $conn->query($countQuery);
+        $total = $countResult->fetch_assoc()['total'];
+        $totalPages = ceil($total / $moviesPerPage);
+        
+        $moviesQuery = "SELECT * FROM movies ORDER BY release_year DESC LIMIT $moviesPerPage OFFSET $offset";
+        $movies = $conn->query($moviesQuery);
+        
+        $pageParam = 'newest_page';
+        $sectionId = 'newest-section';
+    } 
+    else {
+        // Try to treat the section as a genre slug
+        $genreSlug = $section;
+        $genreName = str_replace('-', ' ', $genreSlug); // Convert slug to name format
+        
+        // Query genre by name
+        $genreQuery = "SELECT id, name FROM genres WHERE LOWER(REPLACE(name, ' ', '-')) = ? OR LOWER(name) = ?";
+        $stmt = $conn->prepare($genreQuery);
+        $genreNameLower = strtolower($genreName);
+        $genreSlugLower = strtolower($genreSlug);
+        $stmt->bind_param("ss", $genreSlugLower, $genreNameLower);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $genre = $result->fetch_assoc();
+            $genreId = $genre['id'];
+            $actualGenreName = $genre['name'];
+            
+            // Count total for this genre
             $countQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
                          JOIN movie_genres mg ON m.id = mg.movie_id 
                          JOIN genres g ON mg.genre_id = g.id 
-                         WHERE g.name = 'Action'";
-            $query = "SELECT m.* FROM movies m 
-                    JOIN movie_genres mg ON m.id = mg.movie_id 
-                    JOIN genres g ON mg.genre_id = g.id 
-                    WHERE g.name = 'Action' 
-                    ORDER BY m.view_count DESC
-                    LIMIT $moviesPerPage OFFSET $offset";
-            $pageParam = 'action_page';
-            $sectionId = 'action-section';
-            break;
-        case 'scifi':
-            $countQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
-                        JOIN movie_genres mg ON m.id = mg.movie_id 
-                        JOIN genres g ON mg.genre_id = g.id 
-                        WHERE g.name = 'Sci-Fi'";
-            $query = "SELECT m.* FROM movies m 
-                   JOIN movie_genres mg ON m.id = mg.movie_id 
-                   JOIN genres g ON mg.genre_id = g.id 
-                   WHERE g.name = 'Sci-Fi' 
-                   ORDER BY m.view_count DESC
-                   LIMIT $moviesPerPage OFFSET $offset";
-            $pageParam = 'scifi_page';
-            $sectionId = 'scifi-section';
-            break;
-        default:
-            echo json_encode(['success' => false, 'message' => 'Invalid section']);
-            exit;
+                         WHERE g.id = ?";
+            $stmt = $conn->prepare($countQuery);
+            $stmt->bind_param("i", $genreId);
+            $stmt->execute();
+            $total = $stmt->get_result()->fetch_assoc()['total'];
+            $totalPages = ceil($total / $moviesPerPage);
+            
+            // Get movies for this genre
+            $moviesQuery = "SELECT m.* FROM movies m 
+                          JOIN movie_genres mg ON m.id = mg.movie_id 
+                          JOIN genres g ON mg.genre_id = g.id 
+                          WHERE g.id = ? 
+                          ORDER BY m.view_count DESC
+                          LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($moviesQuery);
+            $stmt->bind_param("iii", $genreId, $moviesPerPage, $offset);
+            $stmt->execute();
+            $movies = $stmt->get_result();
+            
+            // Set appropriate page param and section ID
+            $pageParam = strtolower(str_replace(' ', '_', $actualGenreName)) . '_page';
+            $sectionId = $genreSlug . '-section';
+        } else {
+            // Fallback to trending if genre not found
+            $countQuery = "SELECT COUNT(*) as total FROM movies";
+            $countResult = $conn->query($countQuery);
+            $total = $countResult->fetch_assoc()['total'];
+            $totalPages = ceil($total / $moviesPerPage);
+            
+            $moviesQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT $moviesPerPage OFFSET $offset";
+            $movies = $conn->query($moviesQuery);
+            
+            $pageParam = 'trending_page';
+            $sectionId = 'trending-section';
+        }
     }
-    
-    // Get total count for pagination
-    $countResult = $conn->query($countQuery);
-    $total = $countResult->fetch_assoc()['total'];
-    $totalPages = ceil($total / $moviesPerPage);
-    
-    // Get movies
-    $movies = $conn->query($query);
     
     // Generate HTML content
     ob_start();
@@ -190,7 +229,8 @@ try {
         'success' => true,
         'content' => $content,
         'pagination' => $pagination,
-        'currentPage' => $page,
+        'section' => $section,
+        'page' => $page,
         'totalPages' => $totalPages
     ]);
     

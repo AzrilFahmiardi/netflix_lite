@@ -7,18 +7,35 @@ require_once('../components/session_check.php');
 // Require login for this page
 requireLogin();
 
+// Get all available genres
+$genresQuery = "SELECT * FROM genres ORDER BY name";
+$genres = $conn->query($genresQuery);
+$allGenres = [];
+while ($genreRow = $genres->fetch_assoc()) {
+    $allGenres[] = $genreRow;
+}
+$genres->data_seek(0); // Reset pointer for later use
+
 // Pagination settings
 $moviesPerPage = 6;
 $trendingPage = isset($_GET['trending_page']) ? max(1, (int)$_GET['trending_page']) : 1;
 $newestPage = isset($_GET['newest_page']) ? max(1, (int)$_GET['newest_page']) : 1;
-$actionPage = isset($_GET['action_page']) ? max(1, (int)$_GET['action_page']) : 1;
-$scifiPage = isset($_GET['scifi_page']) ? max(1, (int)$_GET['scifi_page']) : 1;
+
+// Dynamic genre pagination settings
+$genrePages = [];
+foreach ($allGenres as $genre) {
+    $paramName = strtolower(str_replace(' ', '_', $genre['name'])) . '_page';
+    $genrePages[$genre['id']] = [
+        'name' => $genre['name'],
+        'param' => $paramName,
+        'page' => isset($_GET[$paramName]) ? max(1, (int)$_GET[$paramName]) : 1,
+        'slug' => strtolower(str_replace(' ', '-', $genre['name']))
+    ];
+}
 
 // Calculate offset for each section
 $trendingOffset = ($trendingPage - 1) * $moviesPerPage;
 $newestOffset = ($newestPage - 1) * $moviesPerPage;
-$actionOffset = ($actionPage - 1) * $moviesPerPage;
-$scifiOffset = ($scifiPage - 1) * $moviesPerPage;
 
 // Get featured movies for hero section
 $featuredQuery = "SELECT * FROM movies WHERE is_featured = TRUE ORDER BY view_count DESC LIMIT 1";
@@ -36,21 +53,34 @@ $newestCountResult = $conn->query($newestCountQuery);
 $newestTotal = $newestCountResult->fetch_assoc()['total'];
 $newestTotalPages = ceil($newestTotal / $moviesPerPage);
 
-$actionCountQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
-                     JOIN movie_genres mg ON m.id = mg.movie_id 
-                     JOIN genres g ON mg.genre_id = g.id 
-                     WHERE g.name = 'Action'";
-$actionCountResult = $conn->query($actionCountQuery);
-$actionTotal = $actionCountResult->fetch_assoc()['total'];
-$actionTotalPages = ceil($actionTotal / $moviesPerPage);
+// Calculate genre counts and fetch movies for each genre
+$genreMovies = [];
+$genreTotalPages = [];
 
-$scifiCountQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
-                    JOIN movie_genres mg ON m.id = mg.movie_id 
-                    JOIN genres g ON mg.genre_id = g.id 
-                    WHERE g.name = 'Sci-Fi'";
-$scifiCountResult = $conn->query($scifiCountQuery);
-$scifiTotal = $scifiCountResult->fetch_assoc()['total'];
-$scifiTotalPages = ceil($scifiTotal / $moviesPerPage);
+foreach ($allGenres as $genre) {
+    $genreId = $genre['id'];
+    $genreName = $genre['name'];
+    $genrePage = $genrePages[$genreId]['page'];
+    $genreOffset = ($genrePage - 1) * $moviesPerPage;
+    
+    // Count total movies for this genre
+    $countQuery = "SELECT COUNT(DISTINCT m.id) as total FROM movies m 
+                 JOIN movie_genres mg ON m.id = mg.movie_id 
+                 JOIN genres g ON mg.genre_id = g.id 
+                 WHERE g.id = $genreId";
+    $countResult = $conn->query($countQuery);
+    $total = $countResult->fetch_assoc()['total'];
+    $genreTotalPages[$genreId] = ceil($total / $moviesPerPage);
+    
+    // Get movies for this genre
+    $moviesQuery = "SELECT m.* FROM movies m 
+                  JOIN movie_genres mg ON m.id = mg.movie_id 
+                  JOIN genres g ON mg.genre_id = g.id 
+                  WHERE g.id = $genreId 
+                  ORDER BY m.view_count DESC
+                  LIMIT $moviesPerPage OFFSET $genreOffset";
+    $genreMovies[$genreId] = $conn->query($moviesQuery);
+}
 
 // Get movies by category with pagination
 $trendingQuery = "SELECT * FROM movies ORDER BY view_count DESC LIMIT $moviesPerPage OFFSET $trendingOffset";
@@ -58,26 +88,6 @@ $trendingMovies = $conn->query($trendingQuery);
 
 $newestQuery = "SELECT * FROM movies ORDER BY release_year DESC LIMIT $moviesPerPage OFFSET $newestOffset";
 $newestMovies = $conn->query($newestQuery);
-
-$actionQuery = "SELECT m.* FROM movies m 
-                JOIN movie_genres mg ON m.id = mg.movie_id 
-                JOIN genres g ON mg.genre_id = g.id 
-                WHERE g.name = 'Action' 
-                ORDER BY m.view_count DESC
-                LIMIT $moviesPerPage OFFSET $actionOffset";
-$actionMovies = $conn->query($actionQuery);
-
-$scifiQuery = "SELECT m.* FROM movies m 
-               JOIN movie_genres mg ON m.id = mg.movie_id 
-               JOIN genres g ON mg.genre_id = g.id 
-               WHERE g.name = 'Sci-Fi' 
-               ORDER BY m.view_count DESC
-               LIMIT $moviesPerPage OFFSET $scifiOffset";
-$scifiMovies = $conn->query($scifiQuery);
-
-// Get all available genres
-$genresQuery = "SELECT * FROM genres ORDER BY name";
-$genres = $conn->query($genresQuery);
 
 // Function to generate Bootstrap pagination with simple AJAX
 function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $otherParams = []) {
@@ -285,11 +295,14 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                         <?php endwhile; ?>
                     </div>
                 </div>
-                <?= generatePagination($trendingPage, $trendingTotalPages, 'trending_page', 'trending-section', [
-                    'newest_page' => $newestPage,
-                    'action_page' => $actionPage,
-                    'scifi_page' => $scifiPage
-                ]) ?>
+                <?php
+                // Prepare all page params for pagination
+                $allPageParams = [];
+                foreach ($genrePages as $genreId => $genreInfo) {
+                    $allPageParams[$genreInfo['param']] = $genreInfo['page'];
+                }
+                echo generatePagination($trendingPage, $trendingTotalPages, 'trending_page', 'trending-section', $allPageParams);
+                ?>
             </section>
             
             <section class="movie-section mb-5" id="newest-section">
@@ -324,18 +337,27 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                         <?php endwhile; ?>
                     </div>
                 </div>
-                <?= generatePagination($newestPage, $newestTotalPages, 'newest_page', 'newest-section', [
-                    'trending_page' => $trendingPage,
-                    'action_page' => $actionPage,
-                    'scifi_page' => $scifiPage
-                ]) ?>
+                <?= generatePagination($newestPage, $newestTotalPages, 'newest_page', 'newest-section', $allPageParams) ?>
             </section>
             
-            <section class="movie-section mb-5" id="action-section">
-                <h3 class="category-title">Action Movies</h3>
-                <div class="movie-slider" id="action-content">
+            <!-- Dynamic Genre Sections -->
+            <?php foreach ($allGenres as $genre): 
+                $genreId = $genre['id'];
+                $genreName = $genre['name'];
+                $genreSlug = $genrePages[$genreId]['slug'];
+                $genrePage = $genrePages[$genreId]['page'];
+                $genreParam = $genrePages[$genreId]['param'];
+                
+                // Skip if there's no movies for this genre
+                if ($genreTotalPages[$genreId] == 0) continue;
+                
+                $movies = $genreMovies[$genreId];
+            ?>
+            <section class="movie-section mb-5" id="<?= $genreSlug ?>-section">
+                <h3 class="category-title"><?= $genreName ?> Movies</h3>
+                <div class="movie-slider" id="<?= $genreSlug ?>-content">
                     <div class="row g-4">
-                        <?php while($movie = $actionMovies->fetch_assoc()): 
+                        <?php while($movies && $movie = $movies->fetch_assoc()): 
                             // Simple direct poster URL handling without helpers or YouTube fallback
                             $posterUrl = !empty($movie['poster_url']) ? 
                                 (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
@@ -363,51 +385,10 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
                         <?php endwhile; ?>
                     </div>
                 </div>
-                <?= generatePagination($actionPage, $actionTotalPages, 'action_page', 'action-section', [
-                    'trending_page' => $trendingPage,
-                    'newest_page' => $newestPage,
-                    'scifi_page' => $scifiPage
-                ]) ?>
+                <?= generatePagination($genrePage, $genreTotalPages[$genreId], $genreParam, $genreSlug.'-section', $allPageParams) ?>
             </section>
+            <?php endforeach; ?>
             
-            <section class="movie-section mb-5" id="scifi-section">
-                <h3 class="category-title">Sci-Fi Movies</h3>
-                <div class="movie-slider" id="scifi-content">
-                    <div class="row g-4">
-                        <?php while($movie = $scifiMovies->fetch_assoc()): 
-                            // Simple direct poster URL handling without helpers or YouTube fallback
-                            $posterUrl = !empty($movie['poster_url']) ? 
-                                (strpos($movie['poster_url'], 'http') === 0 ? $movie['poster_url'] : '../' . $movie['poster_url']) : 
-                                '../assets/images/default-poster.jpg';
-                        ?>
-                            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
-                                <div class="movie-card">
-                                    <a href="movie.php?id=<?= $movie['id'] ?>">
-                                        <div class="movie-poster">
-                                            <img src="<?= $posterUrl ?>" alt="<?= $movie['title'] ?>">
-                                            <div class="play-btn">
-                                                <i class="bi bi-play-fill"></i>
-                                            </div>
-                                        </div>
-                                        <div class="p-3">
-                                            <h5 class="mb-2 text-white"><?= $movie['title'] ?></h5>
-                                            <p class="text-light small mb-2"><?= $movie['genre'] ?> • <?= $movie['release_year'] ?> • <span class="badge">HD</span></p>
-                                            <div class="d-flex align-items-center">
-                                                <small class="text-light"><i class="bi bi-star-fill text-warning me-1"></i><?= $movie['rating'] ?></small>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endwhile; ?>
-                    </div>
-                </div>
-                <?= generatePagination($scifiPage, $scifiTotalPages, 'scifi_page', 'scifi-section', [
-                    'trending_page' => $trendingPage,
-                    'newest_page' => $newestPage,
-                    'action_page' => $actionPage
-                ]) ?>
-            </section>
         </div>
     </div>
     
@@ -492,13 +473,18 @@ function generatePagination($currentPage, $totalPages, $pageParam, $sectionId, $
         }
         
         function getSectionType(pageParam) {
-            switch(pageParam) {
-                case 'trending_page': return 'trending';
-                case 'newest_page': return 'newest';
-                case 'action_page': return 'action';
-                case 'scifi_page': return 'scifi';
-                default: return 'trending';
+            if (pageParam === 'trending_page') return 'trending';
+            if (pageParam === 'newest_page') return 'newest';
+            
+            // Better handling for dynamic genre page params
+            if (pageParam.endsWith('_page')) {
+                // Extract genre name and convert to slug format for the section parameter
+                const genreName = pageParam.replace('_page', '');
+                const genreSlug = genreName.replace(/_/g, '-');
+                return genreSlug;
             }
+            
+            return 'trending';
         }
     });
     </script>
